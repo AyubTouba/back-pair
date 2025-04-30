@@ -1,0 +1,36 @@
+#![allow(unused_mut)]
+use crate::db::establish_db_connection;
+use crate::dtos::pairfolder_dtos::CreatePairFolderDto;
+use crate::modules::PairFolder;
+use crate::schema::pairfolders;
+use diesel::prelude::*;
+use diesel::result::Error;
+
+pub fn create_folderpair(
+    pair_folder_dto: &CreatePairFolderDto,
+    id_profile: &str,
+) -> Result<(), Error> {
+    let mut connection = &mut establish_db_connection();
+
+    let pair_folder: PairFolder = PairFolder {
+        id: pair_folder_dto.id.clone(),
+        from_folder: pair_folder_dto.from_folder.clone(),
+        to_folder: pair_folder_dto.to_folder.clone(),
+        profile_id: id_profile.to_string(),
+    };
+    diesel::insert_into(pairfolders::table)
+        .values(pair_folder)
+        .execute(connection)
+        .expect("Error saving new pair folder");
+
+    Ok(())
+}
+
+// pub fn list_pairfolders(id_profile: &str) -> Vec<PairFolder> {
+//     let mut connection = &mut establish_db_connection();
+
+//     dsl::pairfolders
+//         .filter(dsl::profile_id.eq(id_profile))
+//         .load(connection)
+//         .expect("Error loading pairfolders")
+// }
