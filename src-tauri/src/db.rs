@@ -54,5 +54,5 @@ fn get_db_path() -> String {
     // For testing purpose
     // env::var("DATABASE_URL").expect("DATABASE_URL must be set")
     let home_dir = dirs::home_dir().unwrap();
-    home_dir.to_str().unwrap().to_string() + "/.config/fastybackup/database.sqlite"
+    home_dir.to_str().unwrap().to_string() + "/.config/backPair/database.sqlite"
 }
