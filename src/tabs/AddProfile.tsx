@@ -1,17 +1,28 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { FolderPair } from "@/types/types"
+import { FolderPair, Profile } from "@/types/types"
 import { ScrollArea } from "@radix-ui/react-scroll-area"
 import { Folder, FolderInput, FolderOutput, Plus, Save, X } from "lucide-react"
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { open } from '@tauri-apps/plugin-dialog';
 import { toast } from "sonner"
 import { invoke } from "@tauri-apps/api/core";
+import { CurrentTabContext } from "@/contexts/CurrentTabContext"
 
 export default function AddProfile() {
-    const [profileName, setProfileName] = useState("")
-    const [folderPairs, setFolderPairs] = useState<FolderPair[]>([{ id: crypto.randomUUID(), from_folder: "", to_folder: "" }])
+    const { currentTab } = useContext(CurrentTabContext);
+    const [isAddOperation, setIsAddOperation] = useState<boolean>(true);
+    const [profileName, setProfileName] = useState<string>("");
+    const [folderPairs, setFolderPairs] = useState<FolderPair[]>([{ id: crypto.randomUUID(), from_folder: "", to_folder: "" }]);
+
+    useEffect(() => {
+        if (currentTab.params) {
+            setProfileName((currentTab.params.profile as Profile).name_profile);
+            setFolderPairs((currentTab.params.profile as Profile).pairfolders);
+            setIsAddOperation(false);
+        }
+    }, []);
 
     const addFolderPair = () => {
         setFolderPairs([...folderPairs, { id: crypto.randomUUID(), from_folder: "", to_folder: "" }])
@@ -58,24 +69,28 @@ export default function AddProfile() {
             })
             return;
         }
-        const payload = { profile: { name_profile: profileName, id: crypto.randomUUID() }, pairFolders: folderPairs };
+        const payload = { profile: { name_profile: profileName, id: isAddOperation ? crypto.randomUUID() : (currentTab.params.profile as Profile).id }, pairFolders: folderPairs };
 
-        invoke("add_profile", { ...payload }).then((data: any) => {
-            console.log(data, "result");
-
-            toast.success("Profile saved", {
-                description: `Profile "${profileName}" has been created with ${folderPairs.length} folder pairs`,
+        if(isAddOperation) {
+            invoke("add_profile", { ...payload }).then(() => {
+                    toast.success("Profile saved", {
+                    description: `Profile "${profileName}" has been created with ${folderPairs.length} folder pairs`,
+                })
             })
-        })
-
-
+        }else {
+            invoke("edit_profile", { ...payload }).then(() => {    
+                toast.success("Profile saved", {
+                    description: `Profile "${profileName}" has been edited with ${folderPairs.length} folder pairs`,
+                })
+            })
+        }
 
     }
 
     return (
         <div className="flex flex-col h-full p-6 gap-6">
             <header className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold">Add Profile</h1>
+                <h1 className="text-2xl font-bold">{isAddOperation ? 'Add' : 'Edit'} Profile</h1>
             </header>
 
             <Card className="flex-1 flex flex-col">
@@ -129,8 +144,8 @@ export default function AddProfile() {
                                                         <Input
                                                             placeholder="Select source folder"
                                                             value={pair.from_folder}
-                                                            onChange={(e) => updateFolderPair(pair.id, "from_folder", e.target.value)}
                                                             className="flex-1"
+                                                            readOnly
                                                         />
                                                         <Button variant="secondary" size="icon" onClick={() => selectFolder(pair.id, "from_folder")}>
                                                             <Folder className="h-4 w-4" />
@@ -146,8 +161,8 @@ export default function AddProfile() {
                                                         <Input
                                                             placeholder="Select destination folder"
                                                             value={pair.to_folder}
-                                                            onChange={(e) => updateFolderPair(pair.id, "to_folder", e.target.value)}
                                                             className="flex-1"
+                                                            readOnly
                                                         />
                                                         <Button variant="secondary" size="icon" onClick={() => selectFolder(pair.id, "to_folder")}>
                                                             <Folder className="h-4 w-4" />

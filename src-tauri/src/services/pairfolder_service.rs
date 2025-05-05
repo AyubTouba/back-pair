@@ -26,11 +26,9 @@ pub fn create_folderpair(
     Ok(())
 }
 
-// pub fn list_pairfolders(id_profile: &str) -> Vec<PairFolder> {
-//     let mut connection = &mut establish_db_connection();
+pub fn delete_pairfolders_by_profile(profile_id:&str) -> Result<(), Error> {
+    let mut connection = &mut establish_db_connection();
+    diesel::delete(pairfolders::table.filter(pairfolders::profile_id.eq(profile_id))).execute(connection)?;
 
-//     dsl::pairfolders
-//         .filter(dsl::profile_id.eq(id_profile))
-//         .load(connection)
-//         .expect("Error loading pairfolders")
-// }
+    Ok(())
+}

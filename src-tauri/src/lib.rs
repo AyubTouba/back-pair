@@ -6,12 +6,8 @@ mod dtos;
 mod modules;
 mod schema;
 mod services;
-use commands::profile_command::{add_profile, list_profiles};
+use commands::profile_command::{add_profile, list_profiles,delete_profile,edit_profile};
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -23,7 +19,7 @@ pub fn run() {
         .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, add_profile, list_profiles])
+        .invoke_handler(tauri::generate_handler![add_profile, list_profiles,delete_profile,edit_profile])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

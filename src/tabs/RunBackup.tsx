@@ -3,7 +3,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Play, FileText } from 'lucide-react'
-import React from 'react';
+import React, { useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core'
+import { Profile } from '@/types/types'
 
 
 
@@ -13,6 +15,14 @@ export default function RunBackup() {
     const [selectedProfile, setSelectedProfile] = React.useState<string>("")
     const [logs, setLogs] = React.useState<string[]>([])
     const [isBackupRunning, setIsBackupRunning] = React.useState(false)
+    const [profiles, setProfiles] = React.useState<Profile[] | []>([])
+
+
+    useEffect(() => {
+        invoke("list_profiles").then((data) => {
+            setProfiles(data as Profile[]);
+        })
+    }, [])
 
     const handleBackup = () => {
         if (!selectedProfile) {
@@ -59,10 +69,7 @@ export default function RunBackup() {
                                     <SelectValue placeholder="Select a profile" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="personal">Personal Files</SelectItem>
-                                    <SelectItem value="work">Work Documents</SelectItem>
-                                    <SelectItem value="photos">Photo Collection</SelectItem>
-                                    <SelectItem value="projects">Development Projects</SelectItem>
+                                    {profiles.map((profile: Profile) => <SelectItem key={profile.id} value={profile.id}>{profile.name_profile}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>

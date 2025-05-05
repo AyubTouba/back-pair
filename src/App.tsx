@@ -1,14 +1,16 @@
+import "@fontsource/ubuntu/700.css";
+
 import { useState } from "react";
-// import { invoke } from "@tauri-apps/api/core";
 import "./index.css";
 import { SidebarInset, SidebarProvider } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import RunBackup from "./tabs/RunBackup";
 import AddProfile from "./tabs/AddProfile";
-import { Menu } from "@/types/types";
+import { Menu, TabRoute } from "@/types/types";
 import { TABS } from "@/types/enums";
 import Profiles from "./tabs/Profiles";
 import { Toaster } from "sonner";
+import { CurrentTabContext } from "./contexts/CurrentTabContext";
 
 
 const menu: Menu = {
@@ -45,26 +47,22 @@ const menu: Menu = {
 }
 
 function App() {
-  // const [greetMsg, setGreetMsg] = useState("");
-  // const [name, setName] = useState("");
-  const [currentTab, setCurrentTab] = useState<TABS>(TABS.RUNBACKUP);
-  // async function greet() {
-  //   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  //   setGreetMsg(await invoke("greet", { name }));
-  // }
+  const [currentTab, setCurrentTab] = useState<TabRoute>({tab:TABS.RUNBACKUP});
 
   return (
+    <CurrentTabContext.Provider value={{currentTab,setCurrentTab}} >
     <SidebarProvider>
       <div className="flex h-screen w-full ">
-        <AppSidebar currentTab={currentTab} menu={menu} setCurrentTab={setCurrentTab} />
+        <AppSidebar menu={menu} />
         <SidebarInset>
-          {currentTab == TABS.RUNBACKUP && <RunBackup />}
-          {currentTab == TABS.PROFILES && <Profiles />}
-          {currentTab == TABS.ADDBACKUPPROFILE && <AddProfile />}
+          {currentTab.tab == TABS.RUNBACKUP && <RunBackup />}
+          {currentTab.tab == TABS.PROFILES && <Profiles />}
+          {currentTab.tab == TABS.ADDBACKUPPROFILE && <AddProfile />}
           <Toaster />
         </SidebarInset>
       </div>
     </SidebarProvider>
+    </CurrentTabContext.Provider>
   );
 }
 

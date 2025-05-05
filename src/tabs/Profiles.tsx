@@ -3,21 +3,35 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { Folder, Plus } from 'lucide-react'
-import React, { useEffect } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { toast } from "sonner"
 import { invoke } from "@tauri-apps/api/core";
 import { Profile } from '@/types/types'
+import { CurrentTabContext } from '@/contexts/CurrentTabContext'
+import { TABS } from '@/types/enums'
 
 // Sample data for profiles
 
 export default function Profiles() {
+    const {setCurrentTab } = useContext(CurrentTabContext);
+
     const [profiles, setProfiles] = React.useState<Profile[] | []>([])
 
     const deleteProfile = (id: string) => {
-        setProfiles(profiles.filter((profile) => profile.id !== id))
-        toast("Profile deleted", {
-            description: "The profile has been removed",
+
+        invoke("delete_profile",{profileId:id}).then((result:any) => {
+            if(result){
+                setProfiles(profiles.filter((profile) => profile.id !== id))
+                toast.success("Profile deleted", {
+                    description: "The profile has been removed",
+                })
+            }
         })
+    
+    }
+
+    const toEditProfile = (profile:Profile) => {
+        setCurrentTab({tab:TABS.ADDBACKUPPROFILE,params:{profile:profile}})
     }
 
 
@@ -32,7 +46,6 @@ export default function Profiles() {
 
     useEffect(() => {
         invoke("list_profiles").then((data) => {
-            console.log(data, "result");
             setProfiles(data as Profile[]);
         })
     }, [])
@@ -43,7 +56,7 @@ export default function Profiles() {
                 <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold">Profiles</h1>
                 </div>
-                <Button >
+                <Button onClick={() => setCurrentTab({tab:TABS.ADDBACKUPPROFILE})} >
                     <Plus className="h-4 w-4 mr-2" />
                     New Profile
                 </Button>
@@ -58,6 +71,7 @@ export default function Profiles() {
                                 profile={profile}
                                 onDelete={deleteProfile}
                                 onRunBackup={runBackup}
+                                onEdit={toEditProfile}
                             />
                         ))
                     ) : (
@@ -69,7 +83,7 @@ export default function Profiles() {
                             <p className="mb-4 text-sm text-muted-foreground">
                                 Create your first backup profile to get started
                             </p>
-                            <Button >
+                            <Button onClick={() => setCurrentTab({tab:TABS.ADDBACKUPPROFILE})}>
                                 <Plus className="h-4 w-4 mr-2" />
                                 Create Profile
                             </Button>

@@ -20,3 +20,8 @@ export type Profile = {
    lastBackup?:string,
    pairfolders:FolderPair[]
 }
+
+export type TabRoute = {
+  tab:TABS,
+  params?:any
+}

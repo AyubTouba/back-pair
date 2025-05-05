@@ -3,7 +3,7 @@
 
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Ubuntu;
 }
 
 @layer utilities {
@@ -123,7 +123,7 @@ body {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;

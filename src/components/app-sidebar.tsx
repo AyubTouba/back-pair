@@ -1,4 +1,3 @@
-import * as React from "react"
 import packageJson from '../../package.json';
 
 import {
@@ -14,19 +13,19 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Shield } from "lucide-react"
-import { TABS } from "@/types/enums";
 import { Menu } from "@/types/types";
+import { CurrentTabContext } from "@/contexts/CurrentTabContext";
+import { useContext } from 'react';
 
 
 interface AppSidebarProps {
-  currentTab: TABS;
   menu: Menu,
-  setCurrentTab: (tab: TABS) => void
 }
 
 type CombinedProps = React.ComponentProps<typeof Sidebar> & AppSidebarProps;
 
-export function AppSidebar({ currentTab, setCurrentTab, menu, ...props }: CombinedProps) {
+export function AppSidebar({  menu, ...props }: CombinedProps) {
+  const {currentTab, setCurrentTab } = useContext(CurrentTabContext);
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -43,8 +42,8 @@ export function AppSidebar({ currentTab, setCurrentTab, menu, ...props }: Combin
               <SidebarMenu>
                 {item.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={item.tab == currentTab}>
-                      <span onClick={() => setCurrentTab(item.tab)}>{item.title}</span>
+                    <SidebarMenuButton className='hover:cursor-pointer' asChild isActive={item.tab == currentTab.tab}>
+                      <span onClick={() => setCurrentTab({tab:item.tab})}>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
