@@ -1,10 +1,10 @@
 #![allow(unused_mut)]
 
-use crate::db::establish_db_connection;
+use crate::db::db::establish_db_connection;
 use crate::dtos::profile_dtos::CrudProfileDto;
 use crate::dtos::profile_with_folders::ProfileWithPairFolder;
-use crate::modules::{PairFolder, Profile};
-use crate::schema::profiles::dsl as p_dsl;
+use crate::db::modules::{PairFolder, Profile};
+use crate::db::schema::profiles::dsl as p_dsl;
 use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::BelongingToDsl;

@@ -11,6 +11,11 @@ body {
     text-wrap: balance;
   }
 }
+@layer base {
+  button {
+    cursor: pointer;
+  }
+}
 
 @custom-variant dark (&:is(.dark *));
 

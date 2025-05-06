@@ -9,9 +9,10 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { toast } from "sonner"
 import { invoke } from "@tauri-apps/api/core";
 import { CurrentTabContext } from "@/contexts/CurrentTabContext"
+import { TABS } from "@/types/enums"
 
 export default function AddProfile() {
-    const { currentTab } = useContext(CurrentTabContext);
+    const { currentTab,setCurrentTab } = useContext(CurrentTabContext);
     const [isAddOperation, setIsAddOperation] = useState<boolean>(true);
     const [profileName, setProfileName] = useState<string>("");
     const [folderPairs, setFolderPairs] = useState<FolderPair[]>([{ id: crypto.randomUUID(), from_folder: "", to_folder: "" }]);
@@ -76,12 +77,16 @@ export default function AddProfile() {
                     toast.success("Profile saved", {
                     description: `Profile "${profileName}" has been created with ${folderPairs.length} folder pairs`,
                 })
+
+                setCurrentTab({tab:TABS.RUNBACKUP});
             })
         }else {
             invoke("edit_profile", { ...payload }).then(() => {    
                 toast.success("Profile saved", {
                     description: `Profile "${profileName}" has been edited with ${folderPairs.length} folder pairs`,
                 })
+
+                setCurrentTab({tab:TABS.RUNBACKUP});
             })
         }
 

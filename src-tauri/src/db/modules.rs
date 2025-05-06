@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(
     Queryable, Selectable, Insertable, Serialize, Deserialize, Debug, PartialEq, Identifiable,
 )]
-#[diesel(table_name = crate::schema::profiles)]
+#[diesel(table_name = crate::db::schema::profiles)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Profile {
     pub id: String,
@@ -24,7 +24,7 @@ pub struct Profile {
     PartialEq,
     Identifiable,
 )]
-#[diesel(table_name = crate::schema::pairfolders)]
+#[diesel(table_name = crate::db::schema::pairfolders)]
 #[diesel(belongs_to(Profile))]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct PairFolder {

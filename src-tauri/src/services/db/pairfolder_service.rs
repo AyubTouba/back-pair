@@ -1,8 +1,8 @@
 #![allow(unused_mut)]
-use crate::db::establish_db_connection;
+use crate::db::db::establish_db_connection;
 use crate::dtos::pairfolder_dtos::CreatePairFolderDto;
-use crate::modules::PairFolder;
-use crate::schema::pairfolders;
+use crate::db::modules::PairFolder;
+use crate::db::schema::pairfolders;
 use diesel::prelude::*;
 use diesel::result::Error;
 

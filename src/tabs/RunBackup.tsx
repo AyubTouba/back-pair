@@ -5,7 +5,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, FileText } from 'lucide-react'
 import React, { useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core'
-import { Profile } from '@/types/types'
+import { BackupProgress, Profile } from '@/types/types'
+import { listen } from '@tauri-apps/api/event';
+import { octetsToReadableSize } from '@/utils/helper'
+import { toast } from 'sonner'
 
 
 
@@ -22,31 +25,30 @@ export default function RunBackup() {
         invoke("list_profiles").then((data) => {
             setProfiles(data as Profile[]);
         })
+
+        listen<BackupProgress>('backup_files', (event) => {
+            setLogs((prev) => [`Copying ${event.payload.nameFile}... ${octetsToReadableSize(event.payload.fileBytesCopied)} / ${octetsToReadableSize(event.payload.fileTotalBytes)}`, ...prev])
+          });
     }, [])
+
+  
 
     const handleBackup = () => {
         if (!selectedProfile) {
             setLogs((prev) => ["Please select a profile first", ...prev])
             return
         }
+        const profile = profiles.find(pr => pr.id === selectedProfile);
+        invoke("run_backup",{profile}).then(() => {
+            setIsBackupRunning(false);
+            setLogs((prev) => [`Backup completed for profile: ${profile?.name_profile}.`, ...prev]);
+            toast.success("Backup Finished", {
+                description: "The backup finished successfully.",
+            });
 
-        setIsBackupRunning(true)
-        setLogs((prev) => [`Starting backup for profile: ${selectedProfile}...`, ...prev])
-
-        // Simulate backup process
-        const files = ["Documents/work", "Pictures/vacation", "Desktop/projects", "Downloads/important"]
-        let fileIndex = 0
-
-        const interval = setInterval(() => {
-            if (fileIndex < files.length) {
-                setLogs((prev) => [`Copying ${files[fileIndex]}...`, ...prev])
-                fileIndex++
-            } else {
-                clearInterval(interval)
-                setLogs((prev) => ["Backup completed successfully!", ...prev])
-                setIsBackupRunning(false)
-            }
-        }, 1500)
+        })
+        setIsBackupRunning(true);
+        setLogs((prev) => [`Starting backup for profile: ${profile?.name_profile}...`, ...prev])
     }
 
 
@@ -88,8 +90,8 @@ export default function RunBackup() {
                             <FileText className="h-4 w-4" />
                             <h3 className="font-medium">Backup Logs</h3>
                         </div>
-                        <Card className="flex-1">
-                            <ScrollArea>
+                        <Card className="flex-1 overflow-hidden">
+                            <ScrollArea type='scroll' className="max-h-64 overflow-auto">
                                 <div className="p-4 font-mono text-sm">
                                     {logs.length > 0 ? (
                                         logs.map((log, index) => (

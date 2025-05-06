@@ -25,3 +25,10 @@ export type TabRoute = {
   tab:TABS,
   params?:any
 }
+
+export type BackupProgress = {
+  nameFile: string;
+  totalBytes: number;
+  fileTotalBytes:number;
+  fileBytesCopied:number;
+};

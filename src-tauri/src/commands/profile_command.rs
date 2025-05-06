@@ -3,7 +3,7 @@ use crate::{
         pairfolder_dtos::CreatePairFolderDto, profile_dtos::CrudProfileDto,
         profile_with_folders::ProfileWithPairFolder,
     },
-    services::{
+    services::db::{
         pairfolder_service::{create_folderpair, delete_pairfolders_by_profile},
         profile_service::{create_profile, delete_profile_with_pairfolders, list_profiles_with_pairfolder, update_profile},
     },

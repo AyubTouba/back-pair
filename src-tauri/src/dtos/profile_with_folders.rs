@@ -1,8 +1,8 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-use crate::modules::{PairFolder, Profile};
+use crate::db::modules::{PairFolder, Profile};
 
-#[derive(Serialize)]
+#[derive(Serialize,Deserialize)]
 pub struct ProfileWithPairFolder {
     #[serde(flatten)]
     pub profile: Profile,
