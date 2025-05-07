@@ -14,7 +14,7 @@ use super::pairfolder_service::delete_pairfolders_by_profile;
 pub fn create_profile(create_profile: &CrudProfileDto) -> Result<(), Error> {
     let mut connection = &mut establish_db_connection();
 
-    let profile: Profile = Profile {
+    let profile = Profile {
         name_profile: create_profile.name_profile.clone(),
         id: create_profile.id.clone(),
         created_at: chrono::Utc::now().naive_utc(),

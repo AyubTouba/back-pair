@@ -32,3 +32,15 @@ export type BackupProgress = {
   fileTotalBytes:number;
   fileBytesCopied:number;
 };
+
+export type BackupHistory = {
+  id: string,
+  date_start: string,
+  date_end:string,
+  files_copied?:number,
+  files_skipped?:number,
+  files_total?:number,
+  folder_size?:number,
+  duration:number,
+  profile:Profile
+}

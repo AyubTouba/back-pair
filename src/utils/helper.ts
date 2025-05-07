@@ -10,3 +10,21 @@ export const octetsToReadableSize = (octets: number): string => {
     return `${kb} KB`;
   }
 };
+
+export const formatDate = (dateString: string): string => {
+  const date = new Date(dateString)
+  return date.toLocaleString()
+}
+
+export const  formatDuration = (seconds: number): string =>  {
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  const parts = [];
+  if (hrs > 0) parts.push(`${hrs} hour${hrs !== 1 ? 's' : ''}`);
+  if (mins > 0) parts.push(`${mins} minute${mins !== 1 ? 's' : ''}`);
+  if (secs > 0 || parts.length === 0) parts.push(`${secs} second${secs !== 1 && secs !== 0 ? 's' : ''}`);
+
+  return parts.join(', ');
+}

@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 
 
 
-export default function RunBackup() {
+export default function Backup() {
 
     const [selectedProfile, setSelectedProfile] = React.useState<string>("")
     const [logs, setLogs] = React.useState<string[]>([])
@@ -39,6 +39,7 @@ export default function RunBackup() {
             return
         }
         const profile = profiles.find(pr => pr.id === selectedProfile);
+        setLogs([]);
         invoke("run_backup",{profile}).then(() => {
             setIsBackupRunning(false);
             setLogs((prev) => [`Backup completed for profile: ${profile?.name_profile}.`, ...prev]);
@@ -90,7 +91,7 @@ export default function RunBackup() {
                             <FileText className="h-4 w-4" />
                             <h3 className="font-medium">Backup Logs</h3>
                         </div>
-                        <Card className="flex-1 overflow-hidden">
+                        <Card className="flex-1 overflow-hidden p-0">
                             <ScrollArea type='scroll' className="max-h-64 overflow-auto">
                                 <div className="p-4 font-mono text-sm">
                                     {logs.length > 0 ? (
