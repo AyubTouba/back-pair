@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(
-    Queryable, Selectable, Insertable, Serialize, Deserialize, Debug, PartialEq, Identifiable,
+    Queryable, Selectable, Insertable, Serialize, Deserialize, Debug, PartialEq, Identifiable, Clone,
 )]
 #[diesel(table_name = crate::db::schema::profiles)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
@@ -23,6 +23,7 @@ pub struct Profile {
     Debug,
     PartialEq,
     Identifiable,
+    Clone,
 )]
 #[diesel(table_name = crate::db::schema::pairfolders)]
 #[diesel(belongs_to(Profile))]
@@ -54,9 +55,9 @@ pub struct History {
     pub date_start: NaiveDateTime,
     pub date_end: NaiveDateTime,
     pub duration: f64,
-    pub files_copied:Option<f64>,
-    pub files_skipped:Option<f64>,
-    pub files_total:Option<f64>,
-    pub folder_size:Option<f64>,
+    pub files_copied: Option<f64>,
+    pub files_skipped: Option<f64>,
+    pub files_total: Option<f64>,
+    pub folder_size: Option<f64>,
     pub profile_id: String,
 }

@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, FileText } from 'lucide-react'
 import React, { useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core'
-import { BackupProgress, Profile } from '@/types/types'
+import {BackupFinished, BackupProgress, Profile} from '@/types/types'
 import { listen } from '@tauri-apps/api/event';
 import { octetsToReadableSize } from '@/utils/helper'
 import { toast } from 'sonner'
@@ -26,12 +26,36 @@ export default function Backup() {
             setProfiles(data as Profile[]);
         })
 
-        listen<BackupProgress>('backup_files', (event) => {
-            setLogs((prev) => [`Copying ${event.payload.nameFile}... ${octetsToReadableSize(event.payload.fileBytesCopied)} / ${octetsToReadableSize(event.payload.fileTotalBytes)}`, ...prev])
-          });
+        let unlistenBackupFiles: (() => void) | undefined;
+        let unlistenBackupFinished: (() => void) | undefined;
+
+        const setupListeners = async () => {
+            unlistenBackupFiles = await listen<BackupProgress>('backup_files', (event) => {
+                setLogs((prev) => [
+                    `Copying ${event.payload.nameFile}... ${octetsToReadableSize(event.payload.fileBytesCopied)} / ${octetsToReadableSize(event.payload.fileTotalBytes)}`,
+                    ...prev
+                ]);
+            });
+
+            unlistenBackupFinished = await listen<BackupFinished>('backup_finished', (event) => {
+                console.log(event.payload);
+                setIsBackupRunning(false);
+                setLogs((prev) => [`Backup completed for profile: ${event.payload.profileName}.`, ...prev]);
+                toast.success("Backup Finished", {
+                    description: "The backup finished successfully.",
+                });
+            });
+        };
+
+        setupListeners();
+
+        return () => {
+            if (unlistenBackupFiles) unlistenBackupFiles();
+            if (unlistenBackupFinished) unlistenBackupFinished();
+        };
     }, [])
 
-  
+
 
     const handleBackup = () => {
         if (!selectedProfile) {
@@ -40,14 +64,7 @@ export default function Backup() {
         }
         const profile = profiles.find(pr => pr.id === selectedProfile);
         setLogs([]);
-        invoke("run_backup",{profile}).then(() => {
-            setIsBackupRunning(false);
-            setLogs((prev) => [`Backup completed for profile: ${profile?.name_profile}.`, ...prev]);
-            toast.success("Backup Finished", {
-                description: "The backup finished successfully.",
-            });
-
-        })
+        invoke("run_backup", { profile });
         setIsBackupRunning(true);
         setLogs((prev) => [`Starting backup for profile: ${profile?.name_profile}...`, ...prev])
     }

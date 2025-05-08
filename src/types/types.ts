@@ -33,6 +33,12 @@ export type BackupProgress = {
   fileBytesCopied:number;
 };
 
+export type BackupFinished = {
+    filesCopied: number;
+    filesTotal:number;
+    profileName: string;
+};
+
 export type BackupHistory = {
   id: string,
   date_start: string,
