@@ -2,7 +2,7 @@ use std::{
     collections::HashSet, path::Path, sync::{Arc, Mutex}, thread
 };
 use std::time::{Duration, Instant};
-use fs_extra::{dir::{copy_with_progress, CopyOptions, TransitProcess}, error::{Error, ErrorKind}};
+use fs_extra::{dir::{copy_with_progress, get_dir_content, CopyOptions, TransitProcess}, error::{Error, ErrorKind}};
 use tauri::{AppHandle, Emitter};
 
 use crate::{app_error::AppError, dtos::{
@@ -17,6 +17,11 @@ pub struct BackupService {
     options: CopyOptions,
 }
 
+#[derive(Clone,Debug)]
+struct DetailFromFolders {
+    files_count:usize,
+    folders_size:f64,
+}
 impl BackupService {
     pub fn default(profile: ProfileWithPairFolder) -> Self {
         let mut options = CopyOptions::new();
@@ -27,7 +32,6 @@ impl BackupService {
 
     pub fn run(&self, app: &AppHandle) -> Result<(), Error> {
         if !self.is_folders_exist() {
-            println!("HERE");
            return Err(Error::new(ErrorKind::InvalidFolder, "One of the Folders doesn't exist"));
         }
         let date_start = chrono::Utc::now().naive_utc();
@@ -39,6 +43,9 @@ impl BackupService {
         let app = app.clone();
         let profile = self.profile.clone();
         let options = self.options.clone();
+        let detail_from_folder = self.details_from_folders()?.clone();
+        println!("Details: Files totals : {:#?}",detail_from_folder.files_count);
+
         let _ = thread::spawn(move || {
             for pairfolder in profile.pairfolders {
                 let copied = Arc::clone(&copied_count);
@@ -102,14 +109,17 @@ impl BackupService {
             let files_copied = Some(*copied_count.lock().unwrap() as f64);
             let files_skipped = Some(*skipped_count.lock().unwrap() as f64);
             let files_total = Some(files_count.lock().unwrap().len() as f64);
-
             let date_end = chrono::Utc::now().naive_utc();
+
+            println!("Files totals : {:#?}, copied: {:#?}",files_total,files_copied);
+
             let history = CreateHistroyDto {
                 date_start,
                 date_end,
                 files_copied,
                 files_skipped,
                 files_total,
+                folder_size: Some(detail_from_folder.folders_size),
                 profile_id: profile.profile.id.clone(),
             };
             let _ = create_history(&history);
@@ -127,7 +137,7 @@ impl BackupService {
         Ok(())
     }
 
-    pub fn is_folders_exist(&self) -> bool {
+     fn is_folders_exist(&self) -> bool {
         for pairfolder in &self.profile.pairfolders {
             if !Path::new(&pairfolder.from_folder).exists() || !Path::new(&pairfolder.to_folder).exists() {
                 return false;
@@ -136,5 +146,22 @@ impl BackupService {
         }
 
          true
+    }
+
+    fn details_from_folders(&self) -> Result<DetailFromFolders,Error> {
+        let mut files_count = 0;
+        let mut folders_size= 0;
+        for pairfolder in &self.profile.pairfolders {
+            let source = Path::new(&pairfolder.from_folder);
+            if source.exists() {
+                let details = get_dir_content(&source)?;
+                files_count = files_count + &details.files.len();
+                folders_size = folders_size + &details.dir_size;
+                }
+            }
+            Ok(DetailFromFolders {
+                files_count,
+                folders_size :folders_size  as f64
+            })
     }
 }

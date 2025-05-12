@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core'
 import {AppError, BackupFinished, BackupProgress, Profile} from '@/types/types'
 import { listen } from '@tauri-apps/api/event';
-import { octetsToReadableSize } from '@/utils/helper'
+import { getFriendlyErrorMessage, octetsToReadableSize } from '@/utils/helper'
 import { toast } from 'sonner'
 
 
@@ -77,7 +77,7 @@ export default function Backup() {
             setLogs((prev) => [`Starting backup for profile: ${profile?.name_profile}...`, ...prev])
         }).catch((err:AppError) => {
             toast.error("Backup Error", {
-                description: err.message,
+                description: getFriendlyErrorMessage(err),
             });
         })
         

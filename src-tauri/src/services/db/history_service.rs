@@ -21,7 +21,7 @@ pub fn create_history(history_dto : &CreateHistroyDto) -> Result<(), Error> {
         files_copied: history_dto.files_copied,
         files_skipped:history_dto.files_skipped,
         files_total:history_dto.files_total,
-        folder_size:None,
+        folder_size:history_dto.folder_size,
     };
 
     diesel::insert_into(history::table).values(&new_history).execute(connection).expect("Error saving new History");
@@ -32,7 +32,6 @@ pub fn create_history(history_dto : &CreateHistroyDto) -> Result<(), Error> {
 pub fn list_history() -> Result<Vec<HistoryWithProfile>,Error>{
     let mut connection = &mut establish_db_connection();
     let data = history::table.inner_join(profiles::table).select((History::as_select(),Profile::as_select())).order(history::created_at.desc()).load::<(History,Profile)>(connection)?;
-    let history = data.into_iter().map(|(history,profile)| HistoryWithProfile {history,profile}).collect::<Vec<HistoryWithProfile>>();
+     Ok(data.into_iter().map(|(history,profile)| HistoryWithProfile {history,profile}).collect::<Vec<HistoryWithProfile>>())
 
-    Ok(history)
 }

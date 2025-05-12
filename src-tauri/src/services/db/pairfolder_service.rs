@@ -21,14 +21,13 @@ pub fn create_folderpair(
     diesel::insert_into(pairfolders::table)
         .values(pair_folder)
         .execute(connection)
-       // .expect("Error saving new pair folder");
 
 }
 
 pub fn delete_pairfolders_by_profile(
     connection: Option<&mut SqliteConnection>,
     profile_id: &str,
-) -> Result<(), Error> {
+) -> Result<usize, Error> {
     let mut owned_connection;
     let conn = match connection {
         Some(conn_ref) => conn_ref,
@@ -39,7 +38,5 @@ pub fn delete_pairfolders_by_profile(
     };
 
     diesel::delete(pairfolders::table.filter(pairfolders::profile_id.eq(profile_id)))
-        .execute(conn)?;
-
-    Ok(())
+        .execute(conn)
 }

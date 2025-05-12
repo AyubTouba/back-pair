@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useEffect, useState } from "react"
 import { invoke } from "@tauri-apps/api/core"
 import { BackupHistory } from "@/types/types"
-import { formatDate, formatDuration } from "@/utils/helper"
+import { formatDate, formatDuration, octetsToReadableSize } from "@/utils/helper"
 
 export default function History() {
 
@@ -55,7 +55,7 @@ export default function History() {
                                     <div className="text-sm font-medium">
                                       {backup.files_copied} / {backup.files_total} files
                                     </div>
-                                  {backup.folder_size &&   <div className="text-xs text-muted-foreground">{backup.folder_size.toFixed(2)} GB</div>}
+                                  {backup.folder_size &&   <div className="text-xs text-muted-foreground">{octetsToReadableSize(backup.folder_size)} </div>}
                                   </div>
                                   <div className="text-right">
                                     <div className="text-sm font-medium">
