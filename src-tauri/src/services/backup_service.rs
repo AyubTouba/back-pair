@@ -1,17 +1,14 @@
 use std::{
-    collections::HashSet,
-    sync::{Arc, Mutex},
-    thread,
+    collections::HashSet, path::Path, sync::{Arc, Mutex}, thread
 };
 use std::time::{Duration, Instant};
-use fs_extra::dir::{copy_with_progress, CopyOptions, TransitProcess};
+use fs_extra::{dir::{copy_with_progress, CopyOptions, TransitProcess}, error::{Error, ErrorKind}};
 use tauri::{AppHandle, Emitter};
 
-use crate::dtos::{
-    backup_progress::BackupProgress, history_dtos::CreateHistroyDto,
-    profile_with_folders::ProfileWithPairFolder,backup_finished::BackupFinished
+use crate::{app_error::AppError, dtos::{
+    backup_finished::BackupFinished, backup_progress::BackupProgress, history_dtos::CreateHistroyDto, profile_with_folders::ProfileWithPairFolder
 
-};
+}};
 
 use super::db::history_service::create_history;
 
@@ -28,7 +25,11 @@ impl BackupService {
         Self { profile, options }
     }
 
-    pub fn run(&self, app: &AppHandle) -> Result<(), fs_extra::error::Error> {
+    pub fn run(&self, app: &AppHandle) -> Result<(), Error> {
+        if !self.is_folders_exist() {
+            println!("HERE");
+           return Err(Error::new(ErrorKind::InvalidFolder, "One of the Folders doesn't exist"));
+        }
         let date_start = chrono::Utc::now().naive_utc();
 
         let copied_count = Arc::new(Mutex::new(0));
@@ -88,7 +89,14 @@ impl BackupService {
                     &options,
                     handle,
                 )
-                .map_err(|e| println!("Error in copy with progress: {}", e.to_string()));
+                .map_err(|e| {
+                    let app_error = AppError::FilesError(e);
+                    let _ = app
+                    .emit(
+                        "backup_error",
+                        app_error.to_string(),
+                    );
+                });
             }
 
             let files_copied = Some(*copied_count.lock().unwrap() as f64);
@@ -117,5 +125,16 @@ impl BackupService {
             .map_err(|e| print!("event emit error {}", e.to_string()));
         });
         Ok(())
+    }
+
+    pub fn is_folders_exist(&self) -> bool {
+        for pairfolder in &self.profile.pairfolders {
+            if !Path::new(&pairfolder.from_folder).exists() || !Path::new(&pairfolder.to_folder).exists() {
+                return false;
+            }
+
+        }
+
+         true
     }
 }

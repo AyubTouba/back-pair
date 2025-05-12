@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, FileText } from 'lucide-react'
 import React, { useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core'
-import {BackupFinished, BackupProgress, Profile} from '@/types/types'
+import {AppError, BackupFinished, BackupProgress, Profile} from '@/types/types'
 import { listen } from '@tauri-apps/api/event';
 import { octetsToReadableSize } from '@/utils/helper'
 import { toast } from 'sonner'
@@ -28,7 +28,7 @@ export default function Backup() {
 
         let unlistenBackupFiles: (() => void) | undefined;
         let unlistenBackupFinished: (() => void) | undefined;
-
+        let unlistenBackupErrors: (() => void) | undefined;
         const setupListeners = async () => {
             unlistenBackupFiles = await listen<BackupProgress>('backup_files', (event) => {
                 setLogs((prev) => [
@@ -38,11 +38,18 @@ export default function Backup() {
             });
 
             unlistenBackupFinished = await listen<BackupFinished>('backup_finished', (event) => {
-                console.log(event.payload);
                 setIsBackupRunning(false);
                 setLogs((prev) => [`Backup completed for profile: ${event.payload.profileName}.`, ...prev]);
                 toast.success("Backup Finished", {
                     description: "The backup finished successfully.",
+                });
+            });
+
+            unlistenBackupErrors = await listen<string>('backup_error', (event) => {
+                setIsBackupRunning(false);
+                setLogs((prev) => [`Backup failed to start. See error details below.`, ...prev]);
+                toast.error("Backup Error", {
+                    description: event.payload,
                 });
             });
         };
@@ -52,6 +59,7 @@ export default function Backup() {
         return () => {
             if (unlistenBackupFiles) unlistenBackupFiles();
             if (unlistenBackupFinished) unlistenBackupFinished();
+            if (unlistenBackupErrors) unlistenBackupErrors();
         };
     }, [])
 
@@ -64,9 +72,15 @@ export default function Backup() {
         }
         const profile = profiles.find(pr => pr.id === selectedProfile);
         setLogs([]);
-        invoke("run_backup", { profile });
-        setIsBackupRunning(true);
-        setLogs((prev) => [`Starting backup for profile: ${profile?.name_profile}...`, ...prev])
+        invoke("run_backup", { profile }).then(() => {
+            setIsBackupRunning(true);
+            setLogs((prev) => [`Starting backup for profile: ${profile?.name_profile}...`, ...prev])
+        }).catch((err:AppError) => {
+            toast.error("Backup Error", {
+                description: err.message,
+            });
+        })
+        
     }
 
 

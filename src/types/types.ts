@@ -50,3 +50,8 @@ export type BackupHistory = {
   duration:number,
   profile:Profile
 }
+
+export type AppError = {
+  type: 'databaseError' | 'filesError';
+  message:string;
+}

@@ -1,3 +1,5 @@
+import { AppError } from "@/types/types";
+
 const ONE_KB = 1000;
 const ONE_MB = 1000000;
 
@@ -27,4 +29,17 @@ export const  formatDuration = (seconds: number): string =>  {
   if (secs > 0 || parts.length === 0) parts.push(`${secs} second${secs !== 1 && secs !== 0 ? 's' : ''}`);
 
   return parts.join(', ');
+}
+
+
+export const  getFriendlyErrorMessage = (error: AppError): string  => {
+  switch (error.type) {
+    case 'databaseError':
+      if (error.message.includes('FOREIGN KEY')) {
+        return 'Something is missing — please check your inputs.';
+      }
+      return 'We couldn’t save your data. Please try again.';
+    default:
+      return 'An unknown error occurred.';
+  }
 }

@@ -281,7 +281,6 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "dirs",
- "dotenvy",
  "fs_extra",
  "rayon",
  "serde",
@@ -291,6 +290,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
  "tauri-plugin-sql",
+ "thiserror 2.0.12",
  "uuid",
 ]
 

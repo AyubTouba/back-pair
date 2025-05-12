@@ -7,10 +7,10 @@ use diesel::prelude::*;
 use diesel::result::Error;
 
 pub fn create_folderpair(
+    connection : &mut SqliteConnection,
     pair_folder_dto: &CreatePairFolderDto,
     id_profile: &str,
-) -> Result<(), Error> {
-    let mut connection = &mut establish_db_connection();
+) -> Result<usize, Error> {
 
     let pair_folder: PairFolder = PairFolder {
         id: pair_folder_dto.id.clone(),
@@ -21,14 +21,25 @@ pub fn create_folderpair(
     diesel::insert_into(pairfolders::table)
         .values(pair_folder)
         .execute(connection)
-        .expect("Error saving new pair folder");
+       // .expect("Error saving new pair folder");
 
-    Ok(())
 }
 
-pub fn delete_pairfolders_by_profile(profile_id:&str) -> Result<(), Error> {
-    let mut connection = &mut establish_db_connection();
-    diesel::delete(pairfolders::table.filter(pairfolders::profile_id.eq(profile_id))).execute(connection)?;
+pub fn delete_pairfolders_by_profile(
+    connection: Option<&mut SqliteConnection>,
+    profile_id: &str,
+) -> Result<(), Error> {
+    let mut owned_connection;
+    let conn = match connection {
+        Some(conn_ref) => conn_ref,
+        None => {
+            owned_connection = establish_db_connection();
+            &mut owned_connection
+        }
+    };
+
+    diesel::delete(pairfolders::table.filter(pairfolders::profile_id.eq(profile_id)))
+        .execute(conn)?;
 
     Ok(())
 }

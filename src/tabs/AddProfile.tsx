@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { FolderPair, Profile } from "@/types/types"
+import { AppError, FolderPair, Profile } from "@/types/types"
 import { ScrollArea } from "@radix-ui/react-scroll-area"
 import { Folder, FolderInput, FolderOutput, Plus, Save, X } from "lucide-react"
 import { useContext, useEffect, useState } from "react";
@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { invoke } from "@tauri-apps/api/core";
 import { CurrentTabContext } from "@/contexts/CurrentTabContext"
 import { TABS } from "@/types/enums"
+import { getFriendlyErrorMessage } from "@/utils/helper"
 
 export default function AddProfile() {
     const { currentTab,setCurrentTab } = useContext(CurrentTabContext);
@@ -79,6 +80,11 @@ export default function AddProfile() {
                 })
 
                 setCurrentTab({tab:TABS.RUNBACKUP});
+            }).catch((err:AppError) =>  {
+                console.log(err);
+                toast.error("Error", {
+                    description: `${getFriendlyErrorMessage(err)}`,
+                })
             })
         }else {
             invoke("edit_profile", { ...payload }).then(() => {    

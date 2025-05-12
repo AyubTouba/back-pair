@@ -23,6 +23,7 @@ mod services {
     }
     pub mod backup_service;
 }
+pub mod app_error; 
 
 use commands::backup_command::{history_backup, run_backup};
 use commands::profile_command::{add_profile, delete_profile, edit_profile, list_profiles};
