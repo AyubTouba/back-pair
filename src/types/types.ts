@@ -38,6 +38,7 @@ export type BackupFinished = {
     profileName: string;
 };
 
+
 export type DetailFromFolders = {
   filesCount:number;
   foldersSize:number;

@@ -1,14 +1,23 @@
-use std::{
-    collections::HashSet, path::Path, sync::{Arc, Mutex}, thread
+use fs_extra::{
+    dir::{copy_with_progress, get_dir_content, CopyOptions, TransitProcess},
+    error::{Error, ErrorKind},
 };
-use fs_extra::{dir::{copy_with_progress, get_dir_content, CopyOptions, TransitProcess}, error::{Error, ErrorKind}};
 use serde::Serialize;
+use std::{
+    collections::HashSet,
+    path::Path,
+    sync::{Arc, Mutex},
+    thread,
+};
 use tauri::{AppHandle, Emitter};
 
-use crate::{app_error::AppError, dtos::{
-    backup_finished::BackupFinished, backup_progress::BackupProgress, history_dtos::CreateHistroyDto, profile_with_folders::ProfileWithPairFolder
-
-}};
+use crate::{
+    app_error::AppError,
+    dtos::{
+        backup_finished::BackupFinished, backup_progress::BackupProgress,
+        history_dtos::CreateHistroyDto, profile_with_folders::ProfileWithPairFolder,
+    },
+};
 
 use super::{db::history_service::create_history, event_service::get_event_steps};
 
@@ -17,10 +26,12 @@ pub struct BackupService {
     options: CopyOptions,
 }
 
-#[derive(Clone,Debug,Serialize)]
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+
 pub struct DetailFromFolders {
-    files_count:usize,
-    folders_size:f64,
+    files_count: usize,
+    folders_size: f64,
 }
 impl BackupService {
     pub fn default(profile: ProfileWithPairFolder) -> Self {
@@ -32,7 +43,10 @@ impl BackupService {
 
     pub fn run(&self, app: &AppHandle) -> Result<DetailFromFolders, Error> {
         if !self.is_folders_exist() {
-           return Err(Error::new(ErrorKind::InvalidFolder, "One of the Folders doesn't exist"));
+            return Err(Error::new(
+                ErrorKind::InvalidFolder,
+                "One of the Folders doesn't exist",
+            ));
         }
         let date_start = chrono::Local::now().naive_local();
 
@@ -45,7 +59,7 @@ impl BackupService {
         let options = self.options.clone();
         let detail_from_folder = self.details_from_folders()?.clone();
         let step = get_event_steps(detail_from_folder.files_count);
-        let _ = thread::spawn(move || { 
+        let _ = thread::spawn(move || {
             for pairfolder in profile.pairfolders {
                 let files = Arc::clone(&files_count);
                 let folder_files = Arc::clone(&files_count);
@@ -61,23 +75,28 @@ impl BackupService {
                         if process_info.file_total_bytes > 0 && process_info.file_bytes_copied == 0
                         {
                             let mut skipped = skipped.lock().unwrap();
-                            *skipped += 1; 
+                            *skipped += 1;
                         } else {
                             let mut copied = copied.lock().unwrap();
                             *copied += 1;
                         }
                     }
 
-                    let copied_files= *copied.lock().unwrap();
+                    let copied_files = *copied.lock().unwrap();
 
-                    if copied_files % step == 0 || copied_files == detail_from_folder.files_count - 1 {
+                    if copied_files % step == 0
+                        || copied_files == detail_from_folder.files_count - 1
+                    {
                         let _ = app
                             .emit(
                                 "backup_files",
                                 BackupProgress {
-                                    copied_files:copied_files,
+                                    copied_files: copied_files,
                                     total_files: detail_from_folder.files_count,
-                                    progress:((copied_files + 1) as f64 / detail_from_folder.files_count as f64 * 100.0).round()
+                                    progress: ((copied_files + 1) as f64
+                                        / detail_from_folder.files_count as f64
+                                        * 100.0)
+                                        .round(),
                                 },
                             )
                             .map_err(|e| print!("event emit error {}", e.to_string()));
@@ -85,7 +104,7 @@ impl BackupService {
 
                     fs_extra::dir::TransitProcessResult::ContinueOrAbort
                 };
-                
+
                 let _ = copy_with_progress(
                     &pairfolder.from_folder,
                     &pairfolder.to_folder,
@@ -94,11 +113,7 @@ impl BackupService {
                 )
                 .map_err(|e| {
                     let app_error = AppError::FilesError(e);
-                    let _ = app
-                    .emit(
-                        "backup_error",
-                        app_error.to_string(),
-                    );
+                    let _ = app.emit("backup_error", app_error.to_string());
                 });
 
                 let mut folder_files = folder_files.lock().unwrap();
@@ -108,59 +123,57 @@ impl BackupService {
             let files_copied = Some(*copied_count.lock().unwrap() as f64);
             let files_skipped = Some(*skipped_count.lock().unwrap() as f64);
             let date_end = chrono::Local::now().naive_local();
-            
 
             let history = CreateHistroyDto {
                 date_start,
                 date_end,
                 files_copied,
                 files_skipped,
-                files_total : Some(detail_from_folder.files_count as f64),
+                files_total: Some(detail_from_folder.files_count as f64),
                 folder_size: Some(detail_from_folder.folders_size),
                 profile_id: profile.profile.id.clone(),
             };
             let _ = create_history(&history);
             let _ = app
-            .emit(
-                "backup_finished",
-                BackupFinished {
-                    files_copied,
-                    files_total:Some(detail_from_folder.files_count as f64) ,
-                    profile_name:profile.profile.name_profile.clone(),
-                },
-            )
-            .map_err(|e| print!("event emit error {}", e.to_string()));
+                .emit(
+                    "backup_finished",
+                    BackupFinished {
+                        files_copied,
+                        files_total: Some(detail_from_folder.files_count as f64),
+                        profile_name: profile.profile.name_profile.clone(),
+                    },
+                )
+                .map_err(|e| print!("event emit error {}", e.to_string()));
         });
         Ok(detail_from_folder)
     }
 
-     fn is_folders_exist(&self) -> bool {
+    fn is_folders_exist(&self) -> bool {
         for pairfolder in &self.profile.pairfolders {
-            if !Path::new(&pairfolder.from_folder).exists() || !Path::new(&pairfolder.to_folder).exists() {
+            if !Path::new(&pairfolder.from_folder).exists()
+                || !Path::new(&pairfolder.to_folder).exists()
+            {
                 return false;
             }
-
         }
 
-         true
+        true
     }
 
-    fn details_from_folders(&self) -> Result<DetailFromFolders,Error> {
+    fn details_from_folders(&self) -> Result<DetailFromFolders, Error> {
         let mut files_count = 0;
-        let mut folders_size= 0;
+        let mut folders_size = 0;
         for pairfolder in &self.profile.pairfolders {
             let source = Path::new(&pairfolder.from_folder);
             if source.exists() {
                 let details = get_dir_content(&source)?;
                 files_count = files_count + &details.files.len();
                 folders_size = folders_size + &details.dir_size;
-                }
             }
-            Ok(DetailFromFolders {
-                files_count,
-                folders_size :folders_size  as f64
-            })
+        }
+        Ok(DetailFromFolders {
+            files_count,
+            folders_size: folders_size as f64,
+        })
     }
-
-  
 }

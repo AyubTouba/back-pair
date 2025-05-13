@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, FileText } from 'lucide-react'
 import React, { useContext, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core'
-import {AppError, BackupFinished, BackupProgress, DetailFromFolders, Profile} from '@/types/types'
+import { AppError, BackupFinished, BackupProgress, DetailFromFolders, Profile } from '@/types/types'
 import { listen } from '@tauri-apps/api/event';
 import { getFriendlyErrorMessage } from '@/utils/helper'
 import { toast } from 'sonner'
@@ -16,21 +16,21 @@ import { ProfileContext } from '@/contexts/ProfilesContext'
 
 
 export default function Backup() {
-    const {profiles, setProfiles} = useContext(ProfileContext);
+    const { profiles, setProfiles } = useContext(ProfileContext);
     const [selectedProfile, setSelectedProfile] = React.useState<string>("")
     const [logs, setLogs] = React.useState<string[]>([])
     const [isBackupRunning, setIsBackupRunning] = React.useState<boolean>(false)
-    const [totalFiles,setTotalFiles] = React.useState<number>(0);
-    const [filesCopied,setFilesCopied] = React.useState<number>(0);
-    const [progress,setProgress] = React.useState<number>(0);
+    const [totalFiles, setTotalFiles] = React.useState<number>(0);
+    const [filesCopied, setFilesCopied] = React.useState<number>(0);
+    const [progress, setProgress] = React.useState<number>(0);
 
     useEffect(() => {
-        if(profiles.length == 0) {
+        if (profiles.length == 0) {
             invoke<Profile[]>("list_profiles").then((data) => {
                 setProfiles(data);
             })
         }
-       
+
 
         let unlistenBackupFiles: (() => void) | undefined;
         let unlistenBackupFinished: (() => void) | undefined;
@@ -40,7 +40,7 @@ export default function Backup() {
                 setProgress(event.payload.progress);
                 setFilesCopied(event.payload.copiedFiles);
                 setLogs((prev) => [
-                    `Copying ${event.payload.copiedFiles} of / ${event.payload.totalFiles} files copied`,
+                    `${event.payload.copiedFiles} of / ${event.payload.totalFiles} files copied`,
                     ...prev
                 ]);
             });
@@ -85,12 +85,12 @@ export default function Backup() {
             setTotalFiles(data.filesCount);
             setIsBackupRunning(true);
             setLogs((prev) => [`Starting backup for profile: ${profile?.name_profile}...`, ...prev])
-        }).catch((err:AppError) => {
+        }).catch((err: AppError) => {
             toast.error("Backup Error", {
                 description: getFriendlyErrorMessage(err),
             });
         })
-        
+
     }
 
 
@@ -128,17 +128,17 @@ export default function Backup() {
                     </div>
 
                     {isBackupRunning && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Progress</span>
-                        <span>
-                          {filesCopied} of {totalFiles} files ({progress}%)
-                        </span>
-                      </div>
-                      <Progress value={progress} className="h-2" />
-                    </div>
-                   </div>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-sm">
+                                    <span>Progress</span>
+                                    <span>
+                                        {filesCopied} of {totalFiles} files ({progress}%)
+                                    </span>
+                                </div>
+                                <Progress value={progress} className="h-2" />
+                            </div>
+                        </div>
                     )}
 
                     <div className="flex flex-col flex-1">
