@@ -3,30 +3,34 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Play, FileText } from 'lucide-react'
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core'
 import {AppError, BackupFinished, BackupProgress, DetailFromFolders, Profile} from '@/types/types'
 import { listen } from '@tauri-apps/api/event';
 import { getFriendlyErrorMessage } from '@/utils/helper'
 import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
+import { ProfileContext } from '@/contexts/ProfilesContext'
 
 
 
 
 export default function Backup() {
-
+    const {profiles, setProfiles} = useContext(ProfileContext);
     const [selectedProfile, setSelectedProfile] = React.useState<string>("")
     const [logs, setLogs] = React.useState<string[]>([])
-    const [isBackupRunning, setIsBackupRunning] = React.useState(false)
-    const [profiles, setProfiles] = React.useState<Profile[] | []>([])
+    const [isBackupRunning, setIsBackupRunning] = React.useState<boolean>(false)
     const [totalFiles,setTotalFiles] = React.useState<number>(0);
     const [filesCopied,setFilesCopied] = React.useState<number>(0);
     const [progress,setProgress] = React.useState<number>(0);
+
     useEffect(() => {
-        invoke<Profile[]>("list_profiles").then((data) => {
-            setProfiles(data);
-        })
+        if(profiles.length == 0) {
+            invoke<Profile[]>("list_profiles").then((data) => {
+                setProfiles(data);
+            })
+        }
+       
 
         let unlistenBackupFiles: (() => void) | undefined;
         let unlistenBackupFinished: (() => void) | undefined;
@@ -127,7 +131,7 @@ export default function Backup() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>Overall Progress</span>
+                        <span>Progress</span>
                         <span>
                           {filesCopied} of {totalFiles} files ({progress}%)
                         </span>

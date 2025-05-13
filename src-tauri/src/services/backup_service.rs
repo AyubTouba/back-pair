@@ -108,7 +108,7 @@ impl BackupService {
             let files_copied = Some(*copied_count.lock().unwrap() as f64);
             let files_skipped = Some(*skipped_count.lock().unwrap() as f64);
             let date_end = chrono::Local::now().naive_local();
-
+            
 
             let history = CreateHistroyDto {
                 date_start,

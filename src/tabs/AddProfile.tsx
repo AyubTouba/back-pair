@@ -11,13 +11,15 @@ import { invoke } from "@tauri-apps/api/core";
 import { CurrentTabContext } from "@/contexts/CurrentTabContext"
 import { TABS } from "@/types/enums"
 import { getFriendlyErrorMessage } from "@/utils/helper"
+import { ProfileContext } from "@/contexts/ProfilesContext"
 
 export default function AddProfile() {
     const { currentTab,setCurrentTab } = useContext(CurrentTabContext);
     const [isAddOperation, setIsAddOperation] = useState<boolean>(true);
     const [profileName, setProfileName] = useState<string>("");
     const [folderPairs, setFolderPairs] = useState<FolderPair[]>([{ id: crypto.randomUUID(), from_folder: "", to_folder: "" }]);
-
+    const {setProfiles} = useContext(ProfileContext);
+    
     useEffect(() => {
         if (currentTab.params) {
             setProfileName((currentTab.params.profile as Profile).name_profile);
@@ -75,6 +77,9 @@ export default function AddProfile() {
 
         if(isAddOperation) {
             invoke("add_profile", { ...payload }).then(() => {
+                invoke<Profile[]>("list_profiles").then((data) => {
+                    setProfiles(data);
+                })
                     toast.success("Profile saved", {
                     description: `Profile "${profileName}" has been created with ${folderPairs.length} folder pairs`,
                 })

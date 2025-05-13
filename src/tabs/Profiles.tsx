@@ -3,19 +3,19 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { Folder, Plus } from 'lucide-react'
-import React, { useContext, useEffect } from 'react'
+import { useContext, useEffect } from 'react'
 import { toast } from "sonner"
 import { invoke } from "@tauri-apps/api/core";
 import { Profile } from '@/types/types'
 import { CurrentTabContext } from '@/contexts/CurrentTabContext'
 import { TABS } from '@/types/enums'
+import { ProfileContext } from '@/contexts/ProfilesContext'
 
-// Sample data for profiles
 
 export default function Profiles() {
     const {setCurrentTab } = useContext(CurrentTabContext);
-
-    const [profiles, setProfiles] = React.useState<Profile[] | []>([])
+    const {profiles, setProfiles} = useContext(ProfileContext);
+    
 
     const deleteProfile = (id: string) => {
 
@@ -45,9 +45,11 @@ export default function Profiles() {
     }
 
     useEffect(() => {
+        if(profiles.length == 0) {
         invoke<Profile[]>("list_profiles").then((data) => {
             setProfiles(data);
         })
+        }
     }, [])
 
     return (

@@ -6,12 +6,12 @@ import { SidebarInset, SidebarProvider } from "./components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
 import Backup from "./tabs/Backup";
 import AddProfile from "./tabs/AddProfile";
-import { Menu, TabRoute } from "@/types/types";
+import { Menu, Profile, TabRoute } from "@/types/types";
 import { TABS } from "@/types/enums";
 import Profiles from "./tabs/Profiles";
 import { Toaster } from "sonner";
-import { CurrentTabContext } from "./contexts/CurrentTabContext";
 import History from "./tabs/History";
+import { AppProvider } from "./contexts/AppProvider";
 
 
 const menu: Menu = {
@@ -49,9 +49,10 @@ const menu: Menu = {
 
 function App() {
   const [currentTab, setCurrentTab] = useState<TabRoute>({tab:TABS.RUNBACKUP});
+  const [profiles, setProfiles] = useState<Profile[]>([]);
 
   return (
-    <CurrentTabContext.Provider value={{currentTab,setCurrentTab}} >
+    <AppProvider currentTab={currentTab} setCurrentTab={setCurrentTab} profiles={profiles} setProfiles={setProfiles}>
     <SidebarProvider>
       <div className="flex h-screen w-full ">
         <AppSidebar menu={menu} />
@@ -64,7 +65,7 @@ function App() {
         </SidebarInset>
       </div>
     </SidebarProvider>
-    </CurrentTabContext.Provider>
+    </AppProvider>
   );
 }
 
