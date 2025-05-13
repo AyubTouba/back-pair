@@ -14,9 +14,8 @@ export default function History() {
     const [history,setHistory] = useState<BackupHistory[]>([]);
 
     useEffect(() => {
-        invoke("history_backup").then((data) => {
-            console.log(data)
-            setHistory(data as BackupHistory[]) ;
+        invoke<BackupHistory[]>("history_backup").then((data) => {
+            setHistory(data) ;
         })
     }, [])
 

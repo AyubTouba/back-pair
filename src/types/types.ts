@@ -27,10 +27,9 @@ export type TabRoute = {
 }
 
 export type BackupProgress = {
-  nameFile: string;
-  totalBytes: number;
-  fileTotalBytes:number;
-  fileBytesCopied:number;
+  totalFiles: number;
+  copiedFiles: number;
+  progress:number;
 };
 
 export type BackupFinished = {
@@ -38,6 +37,11 @@ export type BackupFinished = {
     filesTotal:number;
     profileName: string;
 };
+
+export type DetailFromFolders = {
+  filesCount:number;
+  foldersSize:number;
+}
 
 export type BackupHistory = {
   id: string,

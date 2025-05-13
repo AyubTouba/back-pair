@@ -1,8 +1,8 @@
 use std::{
     collections::HashSet, path::Path, sync::{Arc, Mutex}, thread
 };
-use std::time::{Duration, Instant};
 use fs_extra::{dir::{copy_with_progress, get_dir_content, CopyOptions, TransitProcess}, error::{Error, ErrorKind}};
+use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use crate::{app_error::AppError, dtos::{
@@ -10,15 +10,15 @@ use crate::{app_error::AppError, dtos::{
 
 }};
 
-use super::db::history_service::create_history;
+use super::{db::history_service::create_history, event_service::get_event_steps};
 
 pub struct BackupService {
     pub profile: ProfileWithPairFolder,
     options: CopyOptions,
 }
 
-#[derive(Clone,Debug)]
-struct DetailFromFolders {
+#[derive(Clone,Debug,Serialize)]
+pub struct DetailFromFolders {
     files_count:usize,
     folders_size:f64,
 }
@@ -30,11 +30,11 @@ impl BackupService {
         Self { profile, options }
     }
 
-    pub fn run(&self, app: &AppHandle) -> Result<(), Error> {
+    pub fn run(&self, app: &AppHandle) -> Result<DetailFromFolders, Error> {
         if !self.is_folders_exist() {
            return Err(Error::new(ErrorKind::InvalidFolder, "One of the Folders doesn't exist"));
         }
-        let date_start = chrono::Utc::now().naive_utc();
+        let date_start = chrono::Local::now().naive_local();
 
         let copied_count = Arc::new(Mutex::new(0));
         let skipped_count = Arc::new(Mutex::new(0));
@@ -44,47 +44,43 @@ impl BackupService {
         let profile = self.profile.clone();
         let options = self.options.clone();
         let detail_from_folder = self.details_from_folders()?.clone();
-        println!("Details: Files totals : {:#?}",detail_from_folder.files_count);
-
-        let _ = thread::spawn(move || {
+        let step = get_event_steps(detail_from_folder.files_count);
+        let _ = thread::spawn(move || { 
             for pairfolder in profile.pairfolders {
-                let copied = Arc::clone(&copied_count);
-                let skipped = Arc::clone(&skipped_count);
                 let files = Arc::clone(&files_count);
+                let folder_files = Arc::clone(&files_count);
+                let skipped = Arc::clone(&skipped_count);
                 let app = &app.clone();
-                let mut last_emit = Instant::now();
+                let copied = Arc::clone(&copied_count);
 
                 let handle = move |process_info: TransitProcess| {
                     let file_name = process_info.file_name.clone();
-                    let now = Instant::now();
                     let mut file = files.lock().unwrap();
-
                     if !file.contains(&file_name) {
                         file.insert(file_name.clone());
-                        if now.duration_since(last_emit) > Duration::from_millis(100) {
-                            let _ = app
-                                .emit(
-                                    "backup_files",
-                                    BackupProgress {
-                                        name_file: file_name.clone(),
-                                        total_bytes: process_info.total_bytes,
-                                        file_total_bytes: process_info.file_total_bytes,
-                                        file_bytes_copied: process_info.file_bytes_copied,
-                                        copied_bytes: process_info.copied_bytes,
-                                    },
-                                )
-                                .map_err(|e| print!("event emit error {}", e.to_string()));
-                            last_emit = now;
-                        }
-
                         if process_info.file_total_bytes > 0 && process_info.file_bytes_copied == 0
                         {
                             let mut skipped = skipped.lock().unwrap();
-                            *skipped += 1; // that's not correct
+                            *skipped += 1; 
                         } else {
                             let mut copied = copied.lock().unwrap();
-                            *copied += 1; // that's not correct
+                            *copied += 1;
                         }
+                    }
+
+                    let copied_files= *copied.lock().unwrap();
+
+                    if copied_files % step == 0 || copied_files == detail_from_folder.files_count - 1 {
+                        let _ = app
+                            .emit(
+                                "backup_files",
+                                BackupProgress {
+                                    copied_files:copied_files,
+                                    total_files: detail_from_folder.files_count,
+                                    progress:((copied_files + 1) as f64 / detail_from_folder.files_count as f64 * 100.0).round()
+                                },
+                            )
+                            .map_err(|e| print!("event emit error {}", e.to_string()));
                     }
 
                     fs_extra::dir::TransitProcessResult::ContinueOrAbort
@@ -104,21 +100,22 @@ impl BackupService {
                         app_error.to_string(),
                     );
                 });
+
+                let mut folder_files = folder_files.lock().unwrap();
+                folder_files.clear();
             }
 
             let files_copied = Some(*copied_count.lock().unwrap() as f64);
             let files_skipped = Some(*skipped_count.lock().unwrap() as f64);
-            let files_total = Some(files_count.lock().unwrap().len() as f64);
-            let date_end = chrono::Utc::now().naive_utc();
+            let date_end = chrono::Local::now().naive_local();
 
-            println!("Files totals : {:#?}, copied: {:#?}",files_total,files_copied);
 
             let history = CreateHistroyDto {
                 date_start,
                 date_end,
                 files_copied,
                 files_skipped,
-                files_total,
+                files_total : Some(detail_from_folder.files_count as f64),
                 folder_size: Some(detail_from_folder.folders_size),
                 profile_id: profile.profile.id.clone(),
             };
@@ -128,13 +125,13 @@ impl BackupService {
                 "backup_finished",
                 BackupFinished {
                     files_copied,
-                    files_total,
+                    files_total:Some(detail_from_folder.files_count as f64) ,
                     profile_name:profile.profile.name_profile.clone(),
                 },
             )
             .map_err(|e| print!("event emit error {}", e.to_string()));
         });
-        Ok(())
+        Ok(detail_from_folder)
     }
 
      fn is_folders_exist(&self) -> bool {
@@ -164,4 +161,6 @@ impl BackupService {
                 folders_size :folders_size  as f64
             })
     }
+
+  
 }

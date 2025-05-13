@@ -22,6 +22,7 @@ mod services {
         pub mod profile_service;
     }
     pub mod backup_service;
+    pub mod event_service;
 }
 pub mod app_error; 
 

@@ -5,10 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, FileText } from 'lucide-react'
 import React, { useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core'
-import {AppError, BackupFinished, BackupProgress, Profile} from '@/types/types'
+import {AppError, BackupFinished, BackupProgress, DetailFromFolders, Profile} from '@/types/types'
 import { listen } from '@tauri-apps/api/event';
-import { getFriendlyErrorMessage, octetsToReadableSize } from '@/utils/helper'
+import { getFriendlyErrorMessage } from '@/utils/helper'
 import { toast } from 'sonner'
+import { Progress } from '@/components/ui/progress'
 
 
 
@@ -19,11 +20,12 @@ export default function Backup() {
     const [logs, setLogs] = React.useState<string[]>([])
     const [isBackupRunning, setIsBackupRunning] = React.useState(false)
     const [profiles, setProfiles] = React.useState<Profile[] | []>([])
-
-
+    const [totalFiles,setTotalFiles] = React.useState<number>(0);
+    const [filesCopied,setFilesCopied] = React.useState<number>(0);
+    const [progress,setProgress] = React.useState<number>(0);
     useEffect(() => {
-        invoke("list_profiles").then((data) => {
-            setProfiles(data as Profile[]);
+        invoke<Profile[]>("list_profiles").then((data) => {
+            setProfiles(data);
         })
 
         let unlistenBackupFiles: (() => void) | undefined;
@@ -31,8 +33,10 @@ export default function Backup() {
         let unlistenBackupErrors: (() => void) | undefined;
         const setupListeners = async () => {
             unlistenBackupFiles = await listen<BackupProgress>('backup_files', (event) => {
+                setProgress(event.payload.progress);
+                setFilesCopied(event.payload.copiedFiles);
                 setLogs((prev) => [
-                    `Copying ${event.payload.nameFile}... ${octetsToReadableSize(event.payload.fileBytesCopied)} / ${octetsToReadableSize(event.payload.fileTotalBytes)}`,
+                    `Copying ${event.payload.copiedFiles} of / ${event.payload.totalFiles} files copied`,
                     ...prev
                 ]);
             });
@@ -47,6 +51,7 @@ export default function Backup() {
 
             unlistenBackupErrors = await listen<string>('backup_error', (event) => {
                 setIsBackupRunning(false);
+                setTotalFiles(0);
                 setLogs((prev) => [`Backup failed to start. See error details below.`, ...prev]);
                 toast.error("Backup Error", {
                     description: event.payload,
@@ -72,7 +77,8 @@ export default function Backup() {
         }
         const profile = profiles.find(pr => pr.id === selectedProfile);
         setLogs([]);
-        invoke("run_backup", { profile }).then(() => {
+        invoke<DetailFromFolders>("run_backup", { profile }).then((data) => {
+            setTotalFiles(data.filesCount);
             setIsBackupRunning(true);
             setLogs((prev) => [`Starting backup for profile: ${profile?.name_profile}...`, ...prev])
         }).catch((err:AppError) => {
@@ -116,6 +122,20 @@ export default function Backup() {
                             {isBackupRunning ? "Backing up..." : "Launch Backup"}
                         </Button>
                     </div>
+
+                    {isBackupRunning && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Overall Progress</span>
+                        <span>
+                          {filesCopied} of {totalFiles} files ({progress}%)
+                        </span>
+                      </div>
+                      <Progress value={progress} className="h-2" />
+                    </div>
+                   </div>
+                    )}
 
                     <div className="flex flex-col flex-1">
                         <div className="flex items-center gap-2 mb-2">

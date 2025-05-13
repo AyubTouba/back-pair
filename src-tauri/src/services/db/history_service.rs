@@ -14,7 +14,7 @@ pub fn create_history(history_dto : &CreateHistroyDto) -> Result<(), Error> {
     let new_history = History {
         id: Uuid::new_v4().to_string(),
         profile_id: history_dto.profile_id.clone(),
-        created_at: chrono::Utc::now().naive_utc(),
+        created_at: chrono::Local::now().naive_local(),
         date_start:history_dto.date_start.clone(),
         date_end: history_dto.date_end.clone(),
         duration: diff.num_seconds() as f64,

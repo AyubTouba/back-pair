@@ -45,8 +45,8 @@ export default function Profiles() {
     }
 
     useEffect(() => {
-        invoke("list_profiles").then((data) => {
-            setProfiles(data as Profile[]);
+        invoke<Profile[]>("list_profiles").then((data) => {
+            setProfiles(data);
         })
     }, [])
 
