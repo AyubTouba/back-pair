@@ -19,7 +19,7 @@ export default function AddProfile() {
     const [profileName, setProfileName] = useState<string>("");
     const [folderPairs, setFolderPairs] = useState<FolderPair[]>([{ id: crypto.randomUUID(), from_folder: "", to_folder: "" }]);
     const {setProfiles} = useContext(ProfileContext);
-    
+
     useEffect(() => {
         if (currentTab.params) {
             setProfileName((currentTab.params.profile as Profile).name_profile);
@@ -92,7 +92,12 @@ export default function AddProfile() {
                 })
             })
         }else {
-            invoke("edit_profile", { ...payload }).then(() => {    
+            invoke("edit_profile", { ...payload }).then(() => { 
+                
+                invoke<Profile[]>("list_profiles").then((data) => {
+                    setProfiles(data);
+                })
+                
                 toast.success("Profile saved", {
                     description: `Profile "${profileName}" has been edited with ${folderPairs.length} folder pairs`,
                 })
