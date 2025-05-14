@@ -46,7 +46,7 @@ export default function Backup() {
             });
 
             unlistenBackupFinished = await listen<BackupFinished>('backup_finished', (event) => {
-                setIsBackupRunning(false);
+                resetBackup();
                 setLogs((prev) => [`Backup completed for profile: ${event.payload.profileName}.`, ...prev]);
                 toast.success("Backup Finished", {
                     description: "The backup finished successfully.",
@@ -54,8 +54,7 @@ export default function Backup() {
             });
 
             unlistenBackupErrors = await listen<string>('backup_error', (event) => {
-                setIsBackupRunning(false);
-                setTotalFiles(0);
+                resetBackup();
                 setLogs((prev) => [`Backup failed to start. See error details below.`, ...prev]);
                 toast.error("Backup Error", {
                     description: event.payload,
@@ -72,7 +71,12 @@ export default function Backup() {
         };
     }, [])
 
-
+    const resetBackup = () => {
+        setIsBackupRunning(false);
+        setProgress(0);
+        setFilesCopied(0);
+        setTotalFiles(0);
+    }
 
     const handleBackup = () => {
         if (!selectedProfile) {
@@ -81,9 +85,10 @@ export default function Backup() {
         }
         const profile = profiles.find(pr => pr.id === selectedProfile);
         setLogs([]);
+        setIsBackupRunning(true);
+
         invoke<DetailFromFolders>("run_backup", { profile }).then((data) => {
             setTotalFiles(data.filesCount);
-            setIsBackupRunning(true);
             setLogs((prev) => [`Starting backup for profile: ${profile?.name_profile}...`, ...prev])
         }).catch((err: AppError) => {
             toast.error("Backup Error", {
@@ -127,7 +132,7 @@ export default function Backup() {
                         </Button>
                     </div>
 
-                    {isBackupRunning && (
+                    {(isBackupRunning && totalFiles) && (
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">

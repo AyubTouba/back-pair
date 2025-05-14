@@ -1,4 +1,4 @@
-use fs_extra::{
+use fs_extra_back_pair::{
     dir::{copy_with_progress, get_dir_content, CopyOptions, TransitProcess},
     error::{Error, ErrorKind},
 };
@@ -49,19 +49,23 @@ impl BackupService {
             ));
         }
 
-      
         let app = app.clone();
         let profile = self.profile.clone();
         let options = self.options.clone();
         let detail_from_folder = self.details_from_folders()?.clone();
-        let details =detail_from_folder.clone();
+        let details = detail_from_folder.clone();
         let _ = thread::spawn(move || {
-            Self::process_backup(app,profile,options,detail_from_folder);
+            Self::process_backup(app, profile, options, detail_from_folder);
         });
         Ok(details)
     }
 
-    fn process_backup(app:AppHandle,profile: ProfileWithPairFolder,options:CopyOptions,detail_from_folder:DetailFromFolders) {
+    fn process_backup(
+        app: AppHandle,
+        profile: ProfileWithPairFolder,
+        options: CopyOptions,
+        detail_from_folder: DetailFromFolders,
+    ) {
         let date_start = chrono::Local::now().naive_local();
         let copied_count = Arc::new(Mutex::new(0));
         let skipped_count = Arc::new(Mutex::new(0));
@@ -72,23 +76,19 @@ impl BackupService {
             let files = Arc::clone(&files_count);
             let _skipped = Arc::clone(&skipped_count);
             let app = &app.clone();
+
             let copied = Arc::clone(&copied_count);
-            let from_folder = pairfolder.from_folder.clone();
 
             let handle = move |process_info: TransitProcess| {
                 let mut file = files.lock().unwrap();
-                let key = format!("{}/{}/{}", from_folder, process_info.file_name,process_info.file_total_bytes);
-
-                if !file.contains(&key) {
-                    file.insert(key.clone());
+                if !file.contains(&process_info.path_file) {
+                    file.insert(process_info.path_file.clone());
                     let mut copied = copied.lock().unwrap();
                     *copied += 1;
                 }
 
-                let  copied = copied.lock().unwrap();
-                if *copied % step == 0
-                    || *copied == detail_from_folder.files_count 
-                {
+                let copied = copied.lock().unwrap();
+                if *copied % step == 0 || *copied == detail_from_folder.files_count {
                     let _ = app
                         .emit(
                             "backup_files",
@@ -104,7 +104,7 @@ impl BackupService {
                         .map_err(|e| print!("event emit error {}", e.to_string()));
                 }
 
-                fs_extra::dir::TransitProcessResult::ContinueOrAbort
+                fs_extra_back_pair::dir::TransitProcessResult::ContinueOrAbort
             };
 
             let _ = copy_with_progress(
@@ -118,7 +118,6 @@ impl BackupService {
                 let _ = app.emit("backup_error", app_error.to_string());
             });
         }
-     
 
         let files_copied = Some(*copied_count.lock().unwrap() as f64);
         let files_skipped = Some(*skipped_count.lock().unwrap() as f64);
