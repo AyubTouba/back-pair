@@ -95,7 +95,7 @@ impl BackupService {
                             BackupProgress {
                                 copied_files: *copied,
                                 total_files: detail_from_folder.files_count,
-                                progress: ((*copied + 1) as f64
+                                progress: ((*copied) as f64
                                     / detail_from_folder.files_count as f64
                                     * 100.0)
                                     .round(),

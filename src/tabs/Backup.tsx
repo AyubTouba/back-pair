@@ -11,15 +11,16 @@ import { getFriendlyErrorMessage } from '@/utils/helper'
 import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
 import { ProfileContext } from '@/contexts/ProfilesContext'
+import { BackupContext } from '@/contexts/BackupContext'
 
 
 
 
 export default function Backup() {
     const { profiles, setProfiles } = useContext(ProfileContext);
-    const [selectedProfile, setSelectedProfile] = React.useState<string>("")
-    const [logs, setLogs] = React.useState<string[]>([])
-    const [isBackupRunning, setIsBackupRunning] = React.useState<boolean>(false)
+    const { isBackupRunning, setIsBackupRunning } = useContext(BackupContext);
+    const [selectedProfile, setSelectedProfile] = React.useState<string>("");
+    const [logs, setLogs] = React.useState<string[]>([]);
     const [totalFiles, setTotalFiles] = React.useState<number>(0);
     const [filesCopied, setFilesCopied] = React.useState<number>(0);
     const [progress, setProgress] = React.useState<number>(0);
@@ -113,7 +114,7 @@ export default function Backup() {
                 <CardContent className="flex flex-col gap-6 flex-1">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <div className="flex-1">
-                            <Select value={selectedProfile} onValueChange={setSelectedProfile}>
+                            <Select value={selectedProfile} onValueChange={setSelectedProfile} disabled={isBackupRunning}>
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select a profile" />
                                 </SelectTrigger>
@@ -132,7 +133,7 @@ export default function Backup() {
                         </Button>
                     </div>
 
-                    {(isBackupRunning && totalFiles) && (
+                    {(isBackupRunning && totalFiles != 0) && (
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
@@ -170,7 +171,7 @@ export default function Backup() {
                         </Card>
                     </div>
                 </CardContent>
-                <CardFooter className="text-xs text-muted-foreground">Last backup: Never</CardFooter>
+                {/* TODO  <CardFooter className="text-xs text-muted-foreground">Last backup: Never</CardFooter> */}
             </Card>
         </div>
     )
