@@ -33,10 +33,19 @@ export default function Backup() {
         }
 
 
+        let unlistenBackupStart: (() => void) | undefined;
         let unlistenBackupFiles: (() => void) | undefined;
         let unlistenBackupFinished: (() => void) | undefined;
         let unlistenBackupErrors: (() => void) | undefined;
         const setupListeners = async () => {
+            unlistenBackupStart = await listen<string>('backup_start', (even) => {
+                console.log("backup_start")
+                setLogs((prev) => [
+                    even.payload,
+                    ...prev
+                ]);
+            });
+
             unlistenBackupFiles = await listen<BackupProgress>('backup_files', (event) => {
                 setProgress(event.payload.progress);
                 setFilesCopied(event.payload.copiedFiles);
@@ -66,6 +75,7 @@ export default function Backup() {
         setupListeners();
 
         return () => {
+            if (unlistenBackupStart) unlistenBackupStart();
             if (unlistenBackupFiles) unlistenBackupFiles();
             if (unlistenBackupFinished) unlistenBackupFinished();
             if (unlistenBackupErrors) unlistenBackupErrors();
@@ -92,6 +102,7 @@ export default function Backup() {
             setTotalFiles(data.filesCount);
             setLogs((prev) => [`Starting backup for profile: ${profile?.name_profile}...`, ...prev])
         }).catch((err: AppError) => {
+            resetBackup();
             toast.error("Backup Error", {
                 description: getFriendlyErrorMessage(err),
             });

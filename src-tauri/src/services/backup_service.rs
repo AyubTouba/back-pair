@@ -52,12 +52,17 @@ impl BackupService {
         let app = app.clone();
         let profile = self.profile.clone();
         let options = self.options.clone();
-        let detail_from_folder = self.details_from_folders()?.clone();
-        let details = detail_from_folder.clone();
-        let _ = thread::spawn(move || {
-            Self::process_backup(app, profile, options, detail_from_folder);
-        });
-        Ok(details)
+        match self.details_source_folders(&app) {
+            Ok(details) => {
+                let detail_from_folder = details.clone();
+                let details = detail_from_folder.clone();
+                let _ = thread::spawn(move || {
+                    Self::process_backup(app, profile, options, detail_from_folder);
+                });
+                Ok(details)
+            }
+            Err(e) => Err(Error::new(ErrorKind::Other, &e)),
+        }
     }
 
     fn process_backup(
@@ -157,20 +162,64 @@ impl BackupService {
         true
     }
 
-    fn details_from_folders(&self) -> Result<DetailFromFolders, Error> {
-        let mut files_count = 0;
-        let mut folders_size = 0;
-        for pairfolder in &self.profile.pairfolders {
-            let source = Path::new(&pairfolder.from_folder);
-            if source.exists() {
-                let details = get_dir_content(&source)?;
-                files_count = files_count + &details.files.len();
-                folders_size = folders_size + &details.dir_size;
+    fn details_source_folders(&self, app: &AppHandle) -> Result<DetailFromFolders, String> {
+        let files_count: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
+        let folders_size: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+        let is_has_error = Arc::new(Mutex::new(None));
+
+        let err = Arc::clone(&is_has_error);
+        let profile = self.profile.clone();
+        let files = Arc::clone(&files_count);
+        let folders = Arc::clone(&folders_size);
+        let app = app.clone();
+        let _ = app.emit("backup_start", "Preparing folders for backup…");
+        let _ = thread::spawn(move || {
+            for pairfolder in profile.pairfolders {
+                let source = Path::new(&pairfolder.from_folder);
+                if source.exists() {
+                    let details = get_dir_content(&source);
+                    match details {
+                        Ok(details) => {
+                            let mut file_count = files.lock().unwrap();
+                            let mut folder = folders.lock().unwrap();
+                            *file_count += details.files.len();
+                            *folder += details.dir_size;
+
+                            let folder_name =
+                                source.file_name().unwrap_or_default().to_string_lossy();
+
+                            let _ = app.emit(
+                                "backup_start",
+                                format!(
+                                    "Found {} files in \"{}\"",
+                                    details.files.len(),
+                                    folder_name
+                                ),
+                            );
+                        }
+                        Err(e) => {
+                            let _ = app.emit("backup_error", e.to_string());
+                            let mut error = err.lock().unwrap();
+                            *error = Some(e.to_string());
+                            break;
+                        }
+                    };
+                }
             }
-        }
-        Ok(DetailFromFolders {
-            files_count,
-            folders_size: folders_size as f64,
         })
+        .join()
+        .unwrap();
+
+        let files_count = *files_count.lock().unwrap() as usize;
+        let folders_size = *folders_size.lock().unwrap() as f64;
+        let error = is_has_error.lock().unwrap().clone();
+
+        match error {
+            None => Ok(DetailFromFolders {
+                files_count,
+                folders_size,
+            }),
+            Some(e) => Err(e),
+        }
     }
 }
