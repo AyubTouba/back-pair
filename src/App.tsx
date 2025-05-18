@@ -48,23 +48,24 @@ const menu: Menu = {
 }
 
 function App() {
-  const [currentTab, setCurrentTab] = useState<TabRoute>({tab:TABS.RUNBACKUP});
+  const [currentTab, setCurrentTab] = useState<TabRoute>({ tab: TABS.RUNBACKUP });
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [isBackupRunning, setIsBackupRunning] = useState<boolean>(false)
 
   return (
-    <AppProvider currentTab={currentTab} setCurrentTab={setCurrentTab} profiles={profiles} setProfiles={setProfiles}>
-    <SidebarProvider>
-      <div className="flex h-screen w-full ">
-        <AppSidebar menu={menu} />
-        <SidebarInset>
-          {currentTab.tab == TABS.RUNBACKUP && <Backup />}
-          {currentTab.tab == TABS.PROFILES && <Profiles />}
-          {currentTab.tab == TABS.ADDBACKUPPROFILE && <AddProfile />}
-          {currentTab.tab == TABS.HISTORY && <History />}
-          <Toaster />
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    <AppProvider isBackupRunning={isBackupRunning} setIsBackupRunning={setIsBackupRunning} currentTab={currentTab} setCurrentTab={setCurrentTab} profiles={profiles} setProfiles={setProfiles}>
+      <SidebarProvider>
+        <div className="flex h-screen w-full ">
+          <AppSidebar menu={menu} />
+          <SidebarInset>
+            {currentTab.tab == TABS.RUNBACKUP && <Backup />}
+            {currentTab.tab == TABS.PROFILES && <Profiles />}
+            {currentTab.tab == TABS.ADDBACKUPPROFILE && <AddProfile />}
+            {currentTab.tab == TABS.HISTORY && <History />}
+            <Toaster />
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
     </AppProvider>
   );
 }

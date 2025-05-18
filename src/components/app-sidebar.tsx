@@ -16,6 +16,8 @@ import { Shield } from "lucide-react"
 import { Menu } from "@/types/types";
 import { CurrentTabContext } from "@/contexts/CurrentTabContext";
 import { useContext } from 'react';
+import { cn } from '@/lib/utils';
+import { BackupContext } from '@/contexts/BackupContext';
 
 
 interface AppSidebarProps {
@@ -24,8 +26,10 @@ interface AppSidebarProps {
 
 type CombinedProps = React.ComponentProps<typeof Sidebar> & AppSidebarProps;
 
-export function AppSidebar({  menu, ...props }: CombinedProps) {
-  const {currentTab, setCurrentTab } = useContext(CurrentTabContext);
+export function AppSidebar({ menu, ...props }: CombinedProps) {
+  const { currentTab, setCurrentTab } = useContext(CurrentTabContext);
+  const { isBackupRunning } = useContext(BackupContext);
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -42,8 +46,8 @@ export function AppSidebar({  menu, ...props }: CombinedProps) {
               <SidebarMenu>
                 {item.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton className='hover:cursor-pointer' asChild isActive={item.tab == currentTab.tab}>
-                      <span onClick={() => setCurrentTab({tab:item.tab})}>{item.title}</span>
+                    <SidebarMenuButton className={cn({ 'hover:cursor-pointer': !isBackupRunning, 'hover:cursor-not-allowed': isBackupRunning })} asChild isActive={item.tab == currentTab.tab}>
+                      <span onClick={() => !isBackupRunning && setCurrentTab({ tab: item.tab })}>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}

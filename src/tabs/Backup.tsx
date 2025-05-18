@@ -11,15 +11,16 @@ import { getFriendlyErrorMessage } from '@/utils/helper'
 import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
 import { ProfileContext } from '@/contexts/ProfilesContext'
+import { BackupContext } from '@/contexts/BackupContext'
 
 
 
 
 export default function Backup() {
     const { profiles, setProfiles } = useContext(ProfileContext);
-    const [selectedProfile, setSelectedProfile] = React.useState<string>("")
-    const [logs, setLogs] = React.useState<string[]>([])
-    const [isBackupRunning, setIsBackupRunning] = React.useState<boolean>(false)
+    const { isBackupRunning, setIsBackupRunning } = useContext(BackupContext);
+    const [selectedProfile, setSelectedProfile] = React.useState<string>("");
+    const [logs, setLogs] = React.useState<string[]>([]);
     const [totalFiles, setTotalFiles] = React.useState<number>(0);
     const [filesCopied, setFilesCopied] = React.useState<number>(0);
     const [progress, setProgress] = React.useState<number>(0);
@@ -32,10 +33,19 @@ export default function Backup() {
         }
 
 
+        let unlistenBackupStart: (() => void) | undefined;
         let unlistenBackupFiles: (() => void) | undefined;
         let unlistenBackupFinished: (() => void) | undefined;
         let unlistenBackupErrors: (() => void) | undefined;
         const setupListeners = async () => {
+            unlistenBackupStart = await listen<string>('backup_start', (even) => {
+                console.log("backup_start")
+                setLogs((prev) => [
+                    even.payload,
+                    ...prev
+                ]);
+            });
+
             unlistenBackupFiles = await listen<BackupProgress>('backup_files', (event) => {
                 setProgress(event.payload.progress);
                 setFilesCopied(event.payload.copiedFiles);
@@ -46,7 +56,7 @@ export default function Backup() {
             });
 
             unlistenBackupFinished = await listen<BackupFinished>('backup_finished', (event) => {
-                setIsBackupRunning(false);
+                resetBackup();
                 setLogs((prev) => [`Backup completed for profile: ${event.payload.profileName}.`, ...prev]);
                 toast.success("Backup Finished", {
                     description: "The backup finished successfully.",
@@ -54,8 +64,7 @@ export default function Backup() {
             });
 
             unlistenBackupErrors = await listen<string>('backup_error', (event) => {
-                setIsBackupRunning(false);
-                setTotalFiles(0);
+                resetBackup();
                 setLogs((prev) => [`Backup failed to start. See error details below.`, ...prev]);
                 toast.error("Backup Error", {
                     description: event.payload,
@@ -66,13 +75,19 @@ export default function Backup() {
         setupListeners();
 
         return () => {
+            if (unlistenBackupStart) unlistenBackupStart();
             if (unlistenBackupFiles) unlistenBackupFiles();
             if (unlistenBackupFinished) unlistenBackupFinished();
             if (unlistenBackupErrors) unlistenBackupErrors();
         };
     }, [])
 
-
+    const resetBackup = () => {
+        setIsBackupRunning(false);
+        setProgress(0);
+        setFilesCopied(0);
+        setTotalFiles(0);
+    }
 
     const handleBackup = () => {
         if (!selectedProfile) {
@@ -81,11 +96,13 @@ export default function Backup() {
         }
         const profile = profiles.find(pr => pr.id === selectedProfile);
         setLogs([]);
+        setIsBackupRunning(true);
+
         invoke<DetailFromFolders>("run_backup", { profile }).then((data) => {
             setTotalFiles(data.filesCount);
-            setIsBackupRunning(true);
             setLogs((prev) => [`Starting backup for profile: ${profile?.name_profile}...`, ...prev])
         }).catch((err: AppError) => {
+            resetBackup();
             toast.error("Backup Error", {
                 description: getFriendlyErrorMessage(err),
             });
@@ -108,7 +125,7 @@ export default function Backup() {
                 <CardContent className="flex flex-col gap-6 flex-1">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <div className="flex-1">
-                            <Select value={selectedProfile} onValueChange={setSelectedProfile}>
+                            <Select value={selectedProfile} onValueChange={setSelectedProfile} disabled={isBackupRunning}>
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select a profile" />
                                 </SelectTrigger>
@@ -127,7 +144,7 @@ export default function Backup() {
                         </Button>
                     </div>
 
-                    {isBackupRunning && (
+                    {(isBackupRunning && totalFiles != 0) && (
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <div className="flex justify-between text-sm">
@@ -165,7 +182,7 @@ export default function Backup() {
                         </Card>
                     </div>
                 </CardContent>
-                <CardFooter className="text-xs text-muted-foreground">Last backup: Never</CardFooter>
+                {/* TODO  <CardFooter className="text-xs text-muted-foreground">Last backup: Never</CardFooter> */}
             </Card>
         </div>
     )

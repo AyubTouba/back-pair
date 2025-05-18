@@ -1,4 +1,4 @@
-use fs_extra::{
+use fs_extra_back_pair::{
     dir::{copy_with_progress, get_dir_content, CopyOptions, TransitProcess},
     error::{Error, ErrorKind},
 };
@@ -49,19 +49,28 @@ impl BackupService {
             ));
         }
 
-      
         let app = app.clone();
         let profile = self.profile.clone();
         let options = self.options.clone();
-        let detail_from_folder = self.details_from_folders()?.clone();
-        let details =detail_from_folder.clone();
-        let _ = thread::spawn(move || {
-            Self::process_backup(app,profile,options,detail_from_folder);
-        });
-        Ok(details)
+        match self.details_source_folders(&app) {
+            Ok(details) => {
+                let detail_from_folder = details.clone();
+                let details = detail_from_folder.clone();
+                let _ = thread::spawn(move || {
+                    Self::process_backup(app, profile, options, detail_from_folder);
+                });
+                Ok(details)
+            }
+            Err(e) => Err(Error::new(ErrorKind::Other, &e)),
+        }
     }
 
-    fn process_backup(app:AppHandle,profile: ProfileWithPairFolder,options:CopyOptions,detail_from_folder:DetailFromFolders) {
+    fn process_backup(
+        app: AppHandle,
+        profile: ProfileWithPairFolder,
+        options: CopyOptions,
+        detail_from_folder: DetailFromFolders,
+    ) {
         let date_start = chrono::Local::now().naive_local();
         let copied_count = Arc::new(Mutex::new(0));
         let skipped_count = Arc::new(Mutex::new(0));
@@ -72,30 +81,26 @@ impl BackupService {
             let files = Arc::clone(&files_count);
             let _skipped = Arc::clone(&skipped_count);
             let app = &app.clone();
+
             let copied = Arc::clone(&copied_count);
-            let from_folder = pairfolder.from_folder.clone();
 
             let handle = move |process_info: TransitProcess| {
                 let mut file = files.lock().unwrap();
-                let key = format!("{}/{}/{}", from_folder, process_info.file_name,process_info.file_total_bytes);
-
-                if !file.contains(&key) {
-                    file.insert(key.clone());
+                if !file.contains(&process_info.path_file) {
+                    file.insert(process_info.path_file.clone());
                     let mut copied = copied.lock().unwrap();
                     *copied += 1;
                 }
 
-                let  copied = copied.lock().unwrap();
-                if *copied % step == 0
-                    || *copied == detail_from_folder.files_count 
-                {
+                let copied = copied.lock().unwrap();
+                if *copied % step == 0 || *copied == detail_from_folder.files_count {
                     let _ = app
                         .emit(
                             "backup_files",
                             BackupProgress {
                                 copied_files: *copied,
                                 total_files: detail_from_folder.files_count,
-                                progress: ((*copied + 1) as f64
+                                progress: ((*copied) as f64
                                     / detail_from_folder.files_count as f64
                                     * 100.0)
                                     .round(),
@@ -104,7 +109,7 @@ impl BackupService {
                         .map_err(|e| print!("event emit error {}", e.to_string()));
                 }
 
-                fs_extra::dir::TransitProcessResult::ContinueOrAbort
+                fs_extra_back_pair::dir::TransitProcessResult::ContinueOrAbort
             };
 
             let _ = copy_with_progress(
@@ -118,7 +123,6 @@ impl BackupService {
                 let _ = app.emit("backup_error", app_error.to_string());
             });
         }
-     
 
         let files_copied = Some(*copied_count.lock().unwrap() as f64);
         let files_skipped = Some(*skipped_count.lock().unwrap() as f64);
@@ -158,20 +162,64 @@ impl BackupService {
         true
     }
 
-    fn details_from_folders(&self) -> Result<DetailFromFolders, Error> {
-        let mut files_count = 0;
-        let mut folders_size = 0;
-        for pairfolder in &self.profile.pairfolders {
-            let source = Path::new(&pairfolder.from_folder);
-            if source.exists() {
-                let details = get_dir_content(&source)?;
-                files_count = files_count + &details.files.len();
-                folders_size = folders_size + &details.dir_size;
+    fn details_source_folders(&self, app: &AppHandle) -> Result<DetailFromFolders, String> {
+        let files_count: Arc<Mutex<usize>> = Arc::new(Mutex::new(0));
+        let folders_size: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
+        let is_has_error = Arc::new(Mutex::new(None));
+
+        let err = Arc::clone(&is_has_error);
+        let profile = self.profile.clone();
+        let files = Arc::clone(&files_count);
+        let folders = Arc::clone(&folders_size);
+        let app = app.clone();
+        let _ = app.emit("backup_start", "Preparing folders for backup…");
+        let _ = thread::spawn(move || {
+            for pairfolder in profile.pairfolders {
+                let source = Path::new(&pairfolder.from_folder);
+                if source.exists() {
+                    let details = get_dir_content(&source);
+                    match details {
+                        Ok(details) => {
+                            let mut file_count = files.lock().unwrap();
+                            let mut folder = folders.lock().unwrap();
+                            *file_count += details.files.len();
+                            *folder += details.dir_size;
+
+                            let folder_name =
+                                source.file_name().unwrap_or_default().to_string_lossy();
+
+                            let _ = app.emit(
+                                "backup_start",
+                                format!(
+                                    "Found {} files in \"{}\"",
+                                    details.files.len(),
+                                    folder_name
+                                ),
+                            );
+                        }
+                        Err(e) => {
+                            let _ = app.emit("backup_error", e.to_string());
+                            let mut error = err.lock().unwrap();
+                            *error = Some(e.to_string());
+                            break;
+                        }
+                    };
+                }
             }
-        }
-        Ok(DetailFromFolders {
-            files_count,
-            folders_size: folders_size as f64,
         })
+        .join()
+        .unwrap();
+
+        let files_count = *files_count.lock().unwrap() as usize;
+        let folders_size = *folders_size.lock().unwrap() as f64;
+        let error = is_has_error.lock().unwrap().clone();
+
+        match error {
+            None => Ok(DetailFromFolders {
+                files_count,
+                folders_size,
+            }),
+            Some(e) => Err(e),
+        }
     }
 }

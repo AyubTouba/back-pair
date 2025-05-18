@@ -48,7 +48,8 @@ export function ProfileCard({ profile, onDelete, onRunBackup, onEdit }: ProfileC
                     </DropdownMenu>
                 </div>
                 <CardDescription>
-                    Created: {profile.created_at.split("T")[0]} •{profile.lastBackup ? ` Last backup: ${profile.lastBackup}` : " Never backed up"}
+                    Created: {profile.created_at.split("T")[0]}
+                    {/* TODO •{profile.lastBackup ? ` Last backup: ${profile.lastBackup}` : " Never backed up"} */}
                 </CardDescription>
             </CardHeader>
             <CardContent className="p-4">
@@ -95,7 +96,7 @@ export function ProfileCard({ profile, onDelete, onRunBackup, onEdit }: ProfileC
                 </div>
             </CardContent>
             <CardFooter className="flex justify-between gap-2 border-t p-3 bg-muted/30">
-                <Button onClick={() => onEdit(profile)}variant="outline" size="sm" className="flex-1">
+                <Button onClick={() => onEdit(profile)} variant="outline" size="sm" className="flex-1">
                     <Edit className="h-3 w-3 mr-1" />
                     Edit
                 </Button>
