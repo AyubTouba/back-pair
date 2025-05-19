@@ -1,3 +1,7 @@
+use commands::backup_command::{history_backup, run_backup};
+use commands::profile_command::{add_profile, delete_profile, edit_profile, list_profiles};
+use utils::get_config_app_folder;
+
 mod db {
     pub mod db;
     pub mod modules;
@@ -24,13 +28,22 @@ mod services {
     pub mod backup_service;
     pub mod event_service;
 }
-pub mod app_error; 
+pub mod app_error;
+pub mod utils;
 
-use commands::backup_command::{history_backup, run_backup};
-use commands::profile_command::{add_profile, delete_profile, edit_profile, list_profiles};
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::Folder {
+                        path:  std::path::PathBuf::from(get_config_app_folder() + "/logs"),
+                        file_name: None,
+                    },
+                ))
+                .build(),
+        )
         .setup(|_app| {
             db::db::init();
             Ok(())

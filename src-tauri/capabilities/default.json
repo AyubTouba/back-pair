@@ -9,6 +9,7 @@
     "core:default",
     "opener:default",
     "dialog:default",
-    "sql:default"
+    "sql:default",
+    "log:default"
   ]
 }

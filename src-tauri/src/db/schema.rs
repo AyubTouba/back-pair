@@ -35,8 +35,4 @@ diesel::table! {
 diesel::joinable!(history -> profiles (profile_id));
 diesel::joinable!(pairfolders -> profiles (profile_id));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    history,
-    pairfolders,
-    profiles,
-);
+diesel::allow_tables_to_appear_in_same_query!(history, pairfolders, profiles,);

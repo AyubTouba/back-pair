@@ -5,6 +5,8 @@ use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
+use crate::utils::get_config_app_folder;
+
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 pub fn init() {
@@ -18,8 +20,10 @@ pub fn init() {
 pub fn establish_db_connection() -> SqliteConnection {
     let db_path = get_db_path().clone();
 
-    SqliteConnection::establish(db_path.as_str())
-        .unwrap_or_else(|_| panic!("Error connecting to {}", db_path))
+    SqliteConnection::establish(db_path.as_str()).unwrap_or_else(|e| {
+        log::error!("establish_db_connection {}", e);
+        panic!("Error connecting to {}", db_path)
+    })
 }
 
 fn run_migrations() {
@@ -31,7 +35,10 @@ fn establish_connection() -> SqliteConnection {
     let db_path = "sqlite://".to_string() + get_db_path().as_str();
 
     SqliteConnection::establish(&db_path)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", db_path))
+      .unwrap_or_else(|e| {
+        log::error!("establish_db_connection {}", e);
+        panic!("Error connecting to {}", db_path)
+    })
 }
 
 fn create_db_file() {
@@ -53,6 +60,5 @@ fn db_file_exists() -> bool {
 fn get_db_path() -> String {
     // For testing purpose
     // env::var("DATABASE_URL").expect("DATABASE_URL must be set")
-    let home_dir = dirs::home_dir().unwrap();
-    home_dir.to_str().unwrap().to_string() + "/.config/backPair/database.sqlite"
+    get_config_app_folder() + "/database.sqlite"
 }

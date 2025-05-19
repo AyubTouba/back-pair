@@ -19,13 +19,13 @@ pub fn add_profile(
 }
 
 #[tauri::command]
-pub fn list_profiles() -> Result<Vec<ProfileWithPairFolder>,AppError> {
+pub fn list_profiles() -> Result<Vec<ProfileWithPairFolder>, AppError> {
     Ok(list_profiles_with_pairfolder()?)
 }
 
 #[tauri::command]
-pub fn delete_profile(profile_id: &str) ->Result<(), AppError> {
-  Ok(delete_profile_with_pairfolders(profile_id)?)
+pub fn delete_profile(profile_id: &str) -> Result<(), AppError> {
+    Ok(delete_profile_with_pairfolders(profile_id)?)
 }
 
 #[tauri::command]
@@ -33,5 +33,5 @@ pub fn edit_profile(
     profile: CrudProfileDto,
     pair_folders: Vec<CreatePairFolderDto>,
 ) -> Result<(), AppError> {
-    Ok(update_profile_with_pairfolders(&profile,&pair_folders)?)
+    Ok(update_profile_with_pairfolders(&profile, &pair_folders)?)
 }
