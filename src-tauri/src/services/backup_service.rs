@@ -106,7 +106,9 @@ impl BackupService {
                                     .round(),
                             },
                         )
-                        .map_err(|e| log::error!("app.emit prcoess backup backup_files event: {}",e));
+                        .map_err(|e| {
+                            log::error!("app.emit prcoess backup backup_files event: {}", e)
+                        });
                 }
 
                 fs_extra_back_pair::dir::TransitProcessResult::ContinueOrAbort
@@ -119,7 +121,7 @@ impl BackupService {
                 handle,
             )
             .map_err(|e| {
-                log::error!("copy_with_progress: {}",e);
+                log::error!("copy_with_progress: {}", e);
                 let app_error = AppError::FilesError(e);
                 let _ = app.emit("backup_error", app_error.to_string());
             });
@@ -144,15 +146,20 @@ impl BackupService {
                 "backup_finished",
                 BackupFinished {
                     files_copied,
-                    files_total:history.files_total,
+                    files_total: history.files_total,
                     profile_name: profile.profile.name_profile.clone(),
                 },
             )
             .map_err(|e| {
-                 log::error!("app.emit in process_backup: {}",e);
-                print!("event emit error {}", e.to_string())});
+                log::error!("app.emit in process_backup: {}", e);
+                print!("event emit error {}", e.to_string())
+            });
 
-            log::info!("Backup finished {} / {} copied files",*copied_count.lock().unwrap(),detail_from_folder.files_count)
+        log::info!(
+            "Backup finished {} / {} copied files",
+            *copied_count.lock().unwrap(),
+            detail_from_folder.files_count
+        )
     }
 
     fn is_folders_exist(&self) -> bool {
@@ -203,7 +210,7 @@ impl BackupService {
                             );
                         }
                         Err(e) => {
-                            log::error!("details_source_folders: {}",e);
+                            log::error!("details_source_folders: {}", e);
                             let _ = app.emit("backup_error", e.to_string());
                             let mut error = err.lock().unwrap();
                             *error = Some(e.to_string());

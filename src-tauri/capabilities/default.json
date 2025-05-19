@@ -5,11 +5,19 @@
   "windows": [
     "main"
   ],
+  "platforms": [
+    "macOS",
+    "windows",
+    "linux"
+  ],
   "permissions": [
     "core:default",
     "opener:default",
     "dialog:default",
     "sql:default",
-    "log:default"
+    "log:default",
+    "updater:default",
+    "process:default",
+    "process:allow-restart"
   ]
 }
