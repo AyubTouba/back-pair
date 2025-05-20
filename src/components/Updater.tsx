@@ -12,10 +12,13 @@ export function CheckUpdater() {
     const [isUpdating, setIsUpdating] = useState(false);
     const [updateProgress, setUpdateProgress] = useState(0);
     const [updateComplete, setUpdateComplete] = useState(false);
+    const [version, setVersion] = useState<string>("");
 
     useEffect(() => {
-        check().then(() => {
+        check().then((update) => {
+
             if (update) {
+                setVersion(update.version);
                 setShowUpdateDialog(true);
                 setUpdate(update);
             }
@@ -27,32 +30,25 @@ export function CheckUpdater() {
         if (!update) return;
         setIsUpdating(true);
         let downloaded = 0;
+        let contentLength = 0;
         await update.downloadAndInstall((event) => {
             switch (event.event) {
-
+                case 'Started':
+                    contentLength = event.data.contentLength ? event.data.contentLength : 0;
+                    break;
                 case 'Progress':
                     downloaded += event.data.chunkLength;
-                    setUpdateProgress(downloaded);
+                    if (contentLength > 0) {
+                        const progress = Math.min(Math.round((downloaded / contentLength) * 100), 100);
+                        setUpdateProgress(progress);
+                    }
                     break;
                 case 'Finished':
-                    setUpdateComplete(true)
+                    setUpdateProgress(100);
+                    setUpdateComplete(true);
                     break;
             }
         });
-
-        let progress = 0;
-        const updateInterval = setInterval(() => {
-            progress += Math.floor(Math.random() * 8) + 3 // Random progress between 3-10%
-            if (progress >= 100) {
-                progress = 100
-                clearInterval(updateInterval)
-                setTimeout(() => {
-                    setUpdateComplete(true)
-                }, 500)
-            }
-            setUpdateProgress(progress)
-        }, 300);
-        console.log('update installed');
 
     }
 
@@ -70,7 +66,7 @@ export function CheckUpdater() {
                 </DialogTitle>
                 <DialogDescription>
                     {(!isUpdating && !updateComplete) && (
-                        <span>A new version of BackPair (v1.1.0) is available.</span>
+                        <span>A new version of BackPair {version} is available.</span>
                     )}
 
                 </DialogDescription>
