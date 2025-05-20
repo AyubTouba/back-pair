@@ -34,8 +34,7 @@ fn run_migrations() {
 fn establish_connection() -> SqliteConnection {
     let db_path = "sqlite://".to_string() + get_db_path().as_str();
 
-    SqliteConnection::establish(&db_path)
-      .unwrap_or_else(|e| {
+    SqliteConnection::establish(&db_path).unwrap_or_else(|e| {
         log::error!("establish_db_connection {}", e);
         panic!("Error connecting to {}", db_path)
     })

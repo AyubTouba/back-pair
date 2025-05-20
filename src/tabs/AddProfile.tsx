@@ -137,7 +137,7 @@ export default function AddProfile() {
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-sm font-medium">Folder Pairs</h3>
-                                    <Button variant="outline" size="sm" onClick={addFolderPair}>
+                                    <Button  size="sm" onClick={addFolderPair}>
                                         <Plus className="h-4 w-4 mr-2" />
                                         Add Folder Pair
                                     </Button>

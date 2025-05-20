@@ -1,6 +1,8 @@
 # back-pair
 
-![back-pair Screenshot](pairbackup.png)
+<p align="center">
+  <img src="public/logo.png" alt="back-pair logo" width="200"/>
+</p>
 
 ## Description
 

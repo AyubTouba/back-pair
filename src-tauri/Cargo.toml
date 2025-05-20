@@ -1,6 +1,6 @@
 [package]
 name = "back-pair"
-version = "0.1.0"
+version = "0.1.1"
 description = "A fast and simple backup tool built with Tauri, Rust and React for managing folder-to-folder backups using profiles."
 authors = ["Ayoub Touba"]
 edition = "2021"
@@ -37,3 +37,7 @@ uuid = "1.16.0"
 thiserror = "2"
 tauri-plugin-log = "2"
 log = "0.4"
+tauri-plugin-process = "2"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
