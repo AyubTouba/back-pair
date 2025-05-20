@@ -1,6 +1,6 @@
 # back-pair
 
-![back-pair Screenshot](pairbackup.png)
+![back-pair logo](public/logo.png)
 
 ## Description
 

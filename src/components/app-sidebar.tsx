@@ -12,13 +12,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Shield } from "lucide-react"
 import { Menu } from "@/types/types";
 import { CurrentTabContext } from "@/contexts/CurrentTabContext";
 import { useContext } from 'react';
 import { cn } from '@/lib/utils';
 import { BackupContext } from '@/contexts/BackupContext';
-
+import logo from '@/assets/logo.png';
 
 interface AppSidebarProps {
   menu: Menu,
@@ -34,7 +33,7 @@ export function AppSidebar({ menu, ...props }: CombinedProps) {
     <Sidebar {...props}>
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4 py-2">
-          <Shield className="h-6 w-6 text-primary" />
+          <img src={logo} className="h-6 w-6 text-primary"  />
           <div className="font-semibold text-xl">BackPair</div>
         </div>
       </SidebarHeader>

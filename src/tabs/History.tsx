@@ -38,7 +38,7 @@ export default function History() {
                               <CardHeader className="p-4 flex flex-row items-center justify-between">
                                 <div className="flex items-center gap-3">
                                   <div
-                                    className={`flex h-8 w-8 items-center justify-center rounded-full text-green-500 bg-green-500/10
+                                    className={`flex h-8 w-8 items-center justify-center rounded-full text-blue-500 bg-blue-500/10
                                       backup.status,
                                     )}`}
                                   >
