@@ -12,7 +12,7 @@ import Profiles from "./tabs/Profiles";
 import { Toaster } from "sonner";
 import History from "./tabs/History";
 import { AppProvider } from "./contexts/AppProvider";
-// import { CheckUpdater } from "./components/Updater";
+import { CheckUpdater } from "./components/Updater";
 
 
 const menu: Menu = {
@@ -55,7 +55,7 @@ function App() {
 
   return (
     <AppProvider isBackupRunning={isBackupRunning} setIsBackupRunning={setIsBackupRunning} currentTab={currentTab} setCurrentTab={setCurrentTab} profiles={profiles} setProfiles={setProfiles}>
-     {/* <CheckUpdater />  */}
+     <CheckUpdater /> 
       <SidebarProvider>
         <div className="flex h-screen w-full ">
           <AppSidebar menu={menu} />
