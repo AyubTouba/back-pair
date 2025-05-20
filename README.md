@@ -1,6 +1,8 @@
 # back-pair
 
-![back-pair logo](public/logo.png)
+<p align="center">
+  <img src="public/logo.png" alt="back-pair logo" width="200"/>
+</p>
 
 ## Description
 
