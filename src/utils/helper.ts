@@ -55,3 +55,7 @@ export const getFriendlyErrorMessage = (error: AppError): string => {
       return 'An unknown error occurred.';
   }
 }
+
+export const getPercentage = (progress:number,total:number) => {
+  return Math.min(Math.round((progress / total) * 100), 100);
+}

@@ -7,7 +7,7 @@ import React, { useContext, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core'
 import { AppError, BackupFinished, BackupProgress, DetailFromFolders, Profile } from '@/types/types'
 import { listen } from '@tauri-apps/api/event';
-import { getFriendlyErrorMessage } from '@/utils/helper'
+import { getFriendlyErrorMessage, getPercentage } from '@/utils/helper'
 import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
 import { ProfileContext } from '@/contexts/ProfilesContext'
@@ -39,7 +39,6 @@ export default function Backup() {
         let unlistenBackupErrors: (() => void) | undefined;
         const setupListeners = async () => {
             unlistenBackupStart = await listen<string>('backup_start', (even) => {
-                console.log("backup_start")
                 setLogs((prev) => [
                     even.payload,
                     ...prev
@@ -47,7 +46,7 @@ export default function Backup() {
             });
 
             unlistenBackupFiles = await listen<BackupProgress>('backup_files', (event) => {
-                setProgress(event.payload.progress);
+                setProgress(getPercentage(event.payload.copiedFiles,event.payload.totalFiles));
                 setFilesCopied(event.payload.copiedFiles);
                 setLogs((prev) => [
                     `${event.payload.copiedFiles} of / ${event.payload.totalFiles} files copied`,
@@ -83,6 +82,7 @@ export default function Backup() {
     }, [])
 
     const resetBackup = () => {
+        console.log("RESET")
         setIsBackupRunning(false);
         setProgress(0);
         setFilesCopied(0);

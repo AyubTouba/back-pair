@@ -1376,8 +1376,8 @@ dependencies = [
 
 [[package]]
 name = "fs_extra_back_pair"
-version = "1.3.0"
-source = "git+https://github.com/AyubTouba/fs_extra_back_pair#66f125b11618a9e1532656fb3ef7f2a1f9ebb901"
+version = "1.3.1"
+source = "git+https://github.com/AyubTouba/fs_extra_back_pair?branch=master#2d35ea47e57c540caa0f2900bc7354d7abac720f"
 
 [[package]]
 name = "funty"

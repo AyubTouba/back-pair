@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { CheckCircle2, Download } from "lucide-react";
 import { Progress } from "./ui/progress";
 import { Button } from "./ui/button";
+import { getPercentage } from "@/utils/helper";
 
 export function CheckUpdater() {
     const [update, setUpdate] = useState<Update>();
@@ -39,7 +40,7 @@ export function CheckUpdater() {
                 case 'Progress':
                     downloaded += event.data.chunkLength;
                     if (contentLength > 0) {
-                        const progress = Math.min(Math.round((downloaded / contentLength) * 100), 100);
+                        const progress = getPercentage(downloaded,contentLength);
                         setUpdateProgress(progress);
                     }
                     break;
