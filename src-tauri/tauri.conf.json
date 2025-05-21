@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "back-pair",
-  "version": "0.1.3",
+  "productName": "BackPair",
+  "version": "0.1.4",
   "identifier": "com.back-pair.app",
   "build": {
     "beforeDevCommand": "yarn dev",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "back-pair",
+        "title": "BackPair",
         "width": 1000,
         "height": 700,
         "resizable": false

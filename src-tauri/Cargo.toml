@@ -1,6 +1,6 @@
 [package]
 name = "back-pair"
-version = "0.1.3"
+version = "0.1.4"
 description = "A fast and simple backup tool built with Tauri, Rust and React for managing folder-to-folder backups using profiles."
 authors = ["Ayoub Touba"]
 edition = "2021"
