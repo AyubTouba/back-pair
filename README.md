@@ -1,14 +1,22 @@
-# back-pair
+# BackPair
 
 <p align="center">
   <img src="public/logo.png" alt="back-pair logo" width="200"/>
 </p>
 
-## Description
+<p align="center">
+  <a href="https://github.com/v/release/AyubTouba/back-pair"><img src="https://img.shields.io/github/v/release/AyubTouba/back-pair" alt="Latest Release"></a>
+  <img src="https://img.shields.io/badge/built%20with-tauri-blueviolet" alt="Built with Tauri">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License: MIT">
+</p>
 
-`back-pair` is a desktop application designed to simplify and accelerate the process of backing up folders to internal or external devices. It allows users to create custom backup profiles, defining pairs of source and destination folders. With profiles set up, backing up multiple folders is as easy as selecting a profile and clicking a single button.
+## Overview
 
-Whether you need to regularly back up important documents, media files, or project directories, `back-pair` streamlines the process, saving you time and effort compared to manual copying.
+`BackPair` is a desktop application designed to simplify and accelerate the process of backing up folders to internal or external devices. It allows users to create custom backup profiles, defining pairs of source and destination folders. With profiles set up, backing up multiple folders is as easy as selecting a profile and clicking a single button.
+
+Whether you need to regularly back up important documents, media files, or project directories, `BackPair` streamlines the process, saving you time and effort compared to manual copying.
+
+---
 
 ## Features
 
@@ -19,17 +27,19 @@ Whether you need to regularly back up important documents, media files, or proje
 * **Intuitive User Interface:** A clean and modern interface built with React.js and shadcn UI.
 * **Cross-Platform:** Built with Tauri, providing a native experience on major operating systems.
 
-## Technologies Used
-
-* **Tauri:** 
-* **Rust:**
-* **React.js:** 
-* **shadcn UI:** 
+---
 
 ## Installation
 
-.....
+You can download the latest version for your platform from the [Releases](https://github.com/AyubTouba/back-pair/releases) page.
 
+> **Note for macOS and Windows users**:  
+> You may encounter a warning about the app being from an unidentified developer or not being code-signed. This is expected for now, as the app not yet signed with a verified certificate.  
+> To proceed:  
+> - **macOS**: Right-click the `.app` file → "Open" → then confirm you want to run it.  
+> - **Windows**: Click **"More Info"** on the warning screen, then **"Run anyway."**
+
+---
 ## Usage
 
 1.  **Create a Profile:** Navigate to the "Add Profile" section. Give your profile a descriptive name and add pairs of "From" (source) and "To" (destination) folders. Save the profile.
@@ -38,15 +48,19 @@ Whether you need to regularly back up important documents, media files, or proje
 4.  **Monitor Progress:** The "Backup Logs" area will display the progress of the backup process, showing which files are being copied.
 5.  **View History:** The "History" section show a record of past backup operations.
 
+--- 
+
 ## Contributing
 
-We welcome contributions to `back-pair`! If you have ideas for new features, find bugs, or want to improve the code, please feel free to:
+We welcome contributions to `BackPair`! If you have ideas for new features, find bugs, or want to improve the code, please feel free to:
 
 1.  Fork the repository.
 2.  Create a new branch for your feature or bugfix.
 3.  Make your changes.
 4.  Submit a pull request with a clear description of your changes.
 
+--- 
+
 ## License
-MIT
+This project is licensed under the MIT License
 
