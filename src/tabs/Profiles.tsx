@@ -13,42 +13,40 @@ import { ProfileContext } from '@/contexts/ProfilesContext'
 
 
 export default function Profiles() {
-    const {setCurrentTab } = useContext(CurrentTabContext);
-    const {profiles, setProfiles} = useContext(ProfileContext);
-    
+    const { setCurrentTab } = useContext(CurrentTabContext);
+    const { profiles, setProfiles } = useContext(ProfileContext);
+
 
     const deleteProfile = (id: string) => {
 
-        invoke("delete_profile",{profileId:id}).then((result:any) => {
-            if(result){
+        invoke("delete_profile", { profileId: id }).then((result: any) => {
+            if (result) {
                 setProfiles(profiles.filter((profile) => profile.id !== id))
                 toast.success("Profile deleted", {
                     description: "The profile has been removed",
                 })
             }
         })
-    
+
     }
 
-    const toEditProfile = (profile:Profile) => {
-        setCurrentTab({tab:TABS.ADDBACKUPPROFILE,params:{profile:profile}})
+    const toEditProfile = (profile: Profile) => {
+        setCurrentTab({ tab: TABS.ADDBACKUPPROFILE, params: { profile: profile } })
     }
 
 
     const runBackup = (id: string) => {
         const profile = profiles.find((p) => p.id === id)
         if (profile) {
-            toast("Backup started", {
-                description: `Running backup for "${profile.name_profile}"`,
-            })
+            setCurrentTab({ tab: TABS.RUNBACKUP, params: { profile: profile } })
         }
     }
 
     useEffect(() => {
-        if(profiles.length == 0) {
-        invoke<Profile[]>("list_profiles").then((data) => {
-            setProfiles(data);
-        })
+        if (profiles.length == 0) {
+            invoke<Profile[]>("list_profiles").then((data) => {
+                setProfiles(data);
+            })
         }
     }, [])
 
@@ -58,7 +56,7 @@ export default function Profiles() {
                 <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold">Profiles</h1>
                 </div>
-                <Button onClick={() => setCurrentTab({tab:TABS.ADDBACKUPPROFILE})} >
+                <Button onClick={() => setCurrentTab({ tab: TABS.ADDBACKUPPROFILE })} >
                     <Plus className="h-4 w-4 mr-2" />
                     New Profile
                 </Button>
@@ -85,7 +83,7 @@ export default function Profiles() {
                             <p className="mb-4 text-sm text-muted-foreground">
                                 Create your first backup profile to get started
                             </p>
-                            <Button onClick={() => setCurrentTab({tab:TABS.ADDBACKUPPROFILE})}>
+                            <Button onClick={() => setCurrentTab({ tab: TABS.ADDBACKUPPROFILE })}>
                                 <Plus className="h-4 w-4 mr-2" />
                                 Create Profile
                             </Button>

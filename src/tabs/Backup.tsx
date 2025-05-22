@@ -12,12 +12,14 @@ import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
 import { ProfileContext } from '@/contexts/ProfilesContext'
 import { BackupContext } from '@/contexts/BackupContext'
+import { CurrentTabContext } from '@/contexts/CurrentTabContext'
 
 
 
 
 export default function Backup() {
     const { profiles, setProfiles } = useContext(ProfileContext);
+    const { currentTab } = useContext(CurrentTabContext);
     const { isBackupRunning, setIsBackupRunning } = useContext(BackupContext);
     const [selectedProfile, setSelectedProfile] = React.useState<string>("");
     const [logs, setLogs] = React.useState<string[]>([]);
@@ -32,7 +34,6 @@ export default function Backup() {
             })
         }
 
-
         let unlistenBackupStart: (() => void) | undefined;
         let unlistenBackupFiles: (() => void) | undefined;
         let unlistenBackupFinished: (() => void) | undefined;
@@ -46,7 +47,7 @@ export default function Backup() {
             });
 
             unlistenBackupFiles = await listen<BackupProgress>('backup_files', (event) => {
-                setProgress(getPercentage(event.payload.copiedFiles,event.payload.totalFiles));
+                setProgress(getPercentage(event.payload.copiedFiles, event.payload.totalFiles));
                 setFilesCopied(event.payload.copiedFiles);
                 setLogs((prev) => [
                     `${event.payload.copiedFiles} of / ${event.payload.totalFiles} files copied`,
@@ -73,6 +74,10 @@ export default function Backup() {
 
         setupListeners();
 
+        if (currentTab.params) {
+            handleBackup((currentTab.params.profile as Profile).id);
+        }
+
         return () => {
             if (unlistenBackupStart) unlistenBackupStart();
             if (unlistenBackupFiles) unlistenBackupFiles();
@@ -82,19 +87,19 @@ export default function Backup() {
     }, [])
 
     const resetBackup = () => {
-        console.log("RESET")
         setIsBackupRunning(false);
         setProgress(0);
         setFilesCopied(0);
         setTotalFiles(0);
     }
 
-    const handleBackup = () => {
-        if (!selectedProfile) {
+    const handleBackup = (profileid: null | string = null) => {
+        let profileId = profileid ? profileid : selectedProfile;
+        if (!profileId) {
             setLogs((prev) => ["Please select a profile first", ...prev])
             return
         }
-        const profile = profiles.find(pr => pr.id === selectedProfile);
+        const profile = profiles.find(pr => pr.id === profileId);
         setLogs([]);
         setIsBackupRunning(true);
 
@@ -136,7 +141,7 @@ export default function Backup() {
                         </div>
                         <Button
                             className="mt-2 sm:mt-0 gap-2"
-                            onClick={handleBackup}
+                            onClick={() => handleBackup()}
                             disabled={isBackupRunning || !selectedProfile}
                         >
                             <Play className="h-4 w-4" />
@@ -187,4 +192,3 @@ export default function Backup() {
         </div>
     )
 }
-//className={`${logs.length > 0 ? 'h-[calc(100vh-350px)] w-full rounded-md border' : ''}`}
