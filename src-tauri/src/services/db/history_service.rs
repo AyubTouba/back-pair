@@ -1,6 +1,8 @@
 #![allow(unused_mut)]
 
-use diesel::{result::Error, ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper};
+use diesel::{
+    result::Error, ExpressionMethods, QueryDsl, RunQueryDsl, SelectableHelper, SqliteConnection,
+};
 use uuid::Uuid;
 
 use crate::{
@@ -48,4 +50,20 @@ pub fn list_history() -> Result<Vec<HistoryWithProfile>, Error> {
         .into_iter()
         .map(|(history, profile)| HistoryWithProfile { history, profile })
         .collect::<Vec<HistoryWithProfile>>())
+}
+
+pub fn delete_history_by_profile(
+    connection: Option<&mut SqliteConnection>,
+    profile_id: &str,
+) -> Result<usize, Error> {
+    let mut owned_connection;
+    let conn = match connection {
+        Some(conn_ref) => conn_ref,
+        None => {
+            owned_connection = establish_db_connection();
+            &mut owned_connection
+        }
+    };
+
+    diesel::delete(history::table.filter(history::profile_id.eq(profile_id))).execute(conn)
 }

@@ -3,31 +3,27 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { Folder, Plus } from 'lucide-react'
-import { useContext, useEffect } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { toast } from "sonner"
 import { invoke } from "@tauri-apps/api/core";
 import { Profile } from '@/types/types'
 import { CurrentTabContext } from '@/contexts/CurrentTabContext'
 import { TABS } from '@/types/enums'
 import { ProfileContext } from '@/contexts/ProfilesContext'
+import ConfirmDialog from '@/components/ConfirmDialog'
 
 
 export default function Profiles() {
     const { setCurrentTab } = useContext(CurrentTabContext);
     const { profiles, setProfiles } = useContext(ProfileContext);
-
-
+    const [deleteDialog, setDeleteDialog] = useState<boolean>(false);
+    const [toDelete, setTodelete] = useState<boolean>(false);
+    const [profileIdToDelete, setProfileIdToDelete] = useState<string | null>(null);
     const deleteProfile = (id: string) => {
-
-        invoke("delete_profile", { profileId: id }).then((result: any) => {
-            if (result) {
-                setProfiles(profiles.filter((profile) => profile.id !== id))
-                toast.success("Profile deleted", {
-                    description: "The profile has been removed",
-                })
-            }
-        })
-
+        setTimeout(() => {
+            setProfileIdToDelete(id);
+            setDeleteDialog(true);
+        }, 0);
     }
 
     const toEditProfile = (profile: Profile) => {
@@ -50,6 +46,25 @@ export default function Profiles() {
         }
     }, [])
 
+    useEffect(() => {
+        if (toDelete && profileIdToDelete) {
+            invoke("delete_profile", { profileId: profileIdToDelete }).then(() => {
+
+                invoke<Profile[]>("list_profiles").then((data) => {
+                    setProfiles(data);
+                })
+                toast.success("Profile deleted", {
+                    description: "The profile has been removed",
+                })
+
+            }).catch((e) => toast.error("Profile deleted", {
+                description: e,
+            }))
+            setProfileIdToDelete(null);
+            setTodelete(false);
+        }
+    }, [toDelete])
+
     return (
         <div className="flex flex-col h-full p-6 gap-6">
             <header className="flex items-center justify-between">
@@ -61,8 +76,11 @@ export default function Profiles() {
                     New Profile
                 </Button>
             </header>
-
+            <ConfirmDialog title="Are are sure want to delete this profile"
+                showDialog={deleteDialog} setDialog={setDeleteDialog}
+                setResult={setTodelete} body={null} />
             <ScrollArea className="flex-1 pr-4">
+
                 <div className="grid gap-6 pb-6">
                     {profiles.length > 0 ? (
                         profiles.map((profile) => (
