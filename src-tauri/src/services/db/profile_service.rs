@@ -6,6 +6,7 @@ use crate::db::schema::profiles::dsl as p_dsl;
 use crate::dtos::pairfolder_dtos::CreatePairFolderDto;
 use crate::dtos::profile_dtos::CrudProfileDto;
 use crate::dtos::profile_with_folders::ProfileWithPairFolder;
+use crate::services::db::history_service::delete_history_by_profile;
 use diesel::prelude::*;
 use diesel::result::Error;
 use diesel::BelongingToDsl;
@@ -69,7 +70,9 @@ pub fn delete_profile_with_pairfolders(profile_id: &str) -> Result<(), Error> {
     let mut connection = &mut establish_db_connection();
 
     connection.transaction(|conn| {
+        println!("Profile id {}", profile_id);
         delete_pairfolders_by_profile(Some(conn), profile_id)?;
+        delete_history_by_profile(Some(conn), profile_id)?;
         delete_profile(conn, profile_id)?;
         diesel::result::QueryResult::Ok(())
     })?;

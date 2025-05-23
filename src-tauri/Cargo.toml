@@ -1,6 +1,6 @@
 [package]
 name = "back-pair"
-version = "0.1.4"
+version = "0.1.5"
 description = "A fast and simple backup tool built with Tauri, Rust and React for managing folder-to-folder backups using profiles."
 authors = ["Ayoub Touba"]
 edition = "2021"
@@ -32,7 +32,7 @@ diesel = { version = "2.2.0", features = [
 ] }
 diesel_migrations = "2.0.0"
 chrono = { version = "0.4.24", features = ["serde"] }
-fs_extra_back_pair = { git = "https://github.com/AyubTouba/fs_extra_back_pair" , branch="master" }
+fs_extra_back_pair = { git = "https://github.com/AyubTouba/fs_extra_back_pair", branch = "master" }
 uuid = "1.16.0"
 thiserror = "2"
 tauri-plugin-log = "2"
