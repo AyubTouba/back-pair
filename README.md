@@ -36,7 +36,7 @@ You can download the latest version for your platform from the [Releases](https:
 > **Note for macOS and Windows users**:  
 > You may encounter a warning about the app being from an unidentified developer or not being code-signed. This is expected for now, as the app not yet signed with a verified certificate.  
 > To proceed:  
-> - **macOS**: Right-click the `.app` file → "Open" → then confirm you want to run it.  
+> - **macOS**: Open the terminal and  run the command: `xattr -cr /Applications/BackPair.app `
 > - **Windows**: Click **"More Info"** on the warning screen, then **"Run anyway."**
 
 ---
