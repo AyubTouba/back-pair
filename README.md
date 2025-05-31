@@ -16,6 +16,10 @@
 
 Whether you need to regularly back up important documents, media files, or project directories, `BackPair` streamlines the process, saving you time and effort compared to manual copying.
 
+<p align="center">
+  <img src="public/demo.gif" alt="back-pair logo" />
+</p>
+
 ---
 
 ## Features
