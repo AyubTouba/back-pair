@@ -25,6 +25,7 @@ export default function Backup() {
     const [logs, setLogs] = React.useState<string[]>([]);
     const [totalFiles, setTotalFiles] = React.useState<number>(0);
     const [filesCopied, setFilesCopied] = React.useState<number>(0);
+    const [filesSkipped, setFilesSkipped] = React.useState<number>(0);
     const [progress, setProgress] = React.useState<number>(0);
 
     useEffect(() => {
@@ -47,12 +48,23 @@ export default function Backup() {
             });
 
             unlistenBackupFiles = await listen<BackupProgress>('backup_files', (event) => {
+
+                if (event.payload.copiedFiles != filesCopied) {
+                    setLogs((prev) => [
+                        `${event.payload.copiedFiles} of ${event.payload.totalFiles} files copied`,
+                        ...prev
+                    ]);
+                }
+                if (event.payload.skippedFiles != filesSkipped) {
+                    setLogs((prev) => [
+                        `${event.payload.skippedFiles} of ${event.payload.totalFiles} files skipped (exist)`,
+                        ...prev
+                    ]);
+                }
+
                 setProgress(getPercentage(event.payload.copiedFiles, event.payload.totalFiles));
                 setFilesCopied(event.payload.copiedFiles);
-                setLogs((prev) => [
-                    `${event.payload.copiedFiles} of / ${event.payload.totalFiles} files copied`,
-                    ...prev
-                ]);
+                setFilesSkipped(event.payload.skippedFiles);
             });
 
             unlistenBackupFinished = await listen<BackupFinished>('backup_finished', (event) => {
@@ -90,6 +102,7 @@ export default function Backup() {
         setIsBackupRunning(false);
         setProgress(0);
         setFilesCopied(0);
+        setFilesSkipped(0)
         setTotalFiles(0);
     }
 

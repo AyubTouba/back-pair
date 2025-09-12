@@ -16,7 +16,8 @@ use crate::{
     dtos::{
         backup_finished::BackupFinished, backup_progress::BackupProgress,
         history_dtos::CreateHistroyDto, profile_with_folders::ProfileWithPairFolder,
-    }, services::event_service::send_event,
+    },
+    services::event_service::send_event,
 };
 
 use super::{db::history_service::create_history, event_service::get_event_steps};
@@ -36,8 +37,8 @@ pub struct DetailFromFolders {
 impl BackupService {
     pub fn default(profile: ProfileWithPairFolder) -> Self {
         let mut options = CopyOptions::new();
-        options.overwrite = true;
         options.buffer_size = 1000000; // 1000000Octe => 1Mb
+        options.skip_exist = true;
         Self { profile, options }
     }
 
@@ -79,26 +80,44 @@ impl BackupService {
 
         for pairfolder in profile.pairfolders {
             let files = Arc::clone(&files_count);
-            let _skipped = Arc::clone(&skipped_count);
+            let skipped = Arc::clone(&skipped_count);
             let app = &app.clone();
 
             let copied = Arc::clone(&copied_count);
 
-            let handle  = move |process_info: TransitProcess| {
+            let handle = move |process_info: TransitProcess| {
                 let mut file = files.lock().unwrap();
-                if !file.contains(&process_info.path_file) {
-                    file.insert(process_info.path_file.clone());
-                    let mut copied = copied.lock().unwrap();
-                    *copied += 1;
-                }
+                log::info!(
+                    "file infos: {}, copy files  : {} size file : {}",
+                    &process_info.path_file,
+                    &process_info.file_bytes_copied,
+                    &process_info.copied_bytes
+                );
 
-                let copied = copied.lock().unwrap();
-                if *copied % step == 0 || *copied == detail_from_folder.files_count {
-                    send_event(app,"backup_files",BackupProgress {
+                if process_info.file_bytes_copied == 0 && process_info.copied_bytes == 0 {
+                       let mut skipped = skipped.lock().unwrap();
+                       *skipped += 1;
+
+                } else {
+                    if !file.contains(&process_info.path_file) {
+                        file.insert(process_info.path_file.clone());
+                        let mut copied = copied.lock().unwrap();
+                        *copied += 1;
+                    }
+
+                    let skipped = skipped.lock().unwrap();
+                    let copied = copied.lock().unwrap();
+                    if (*copied + *skipped) % step == 0 || (*copied + *skipped) == detail_from_folder.files_count {
+                        send_event(
+                            app,
+                            "backup_files",
+                            BackupProgress {
                                 copied_files: *copied,
-                                total_files:detail_from_folder.files_count
-
-                            });
+                                skipped_files: *skipped,
+                                total_files: detail_from_folder.files_count,
+                            },
+                        );
+                    }
                 }
 
                 fs_extra_back_pair::dir::TransitProcessResult::ContinueOrAbort
@@ -121,10 +140,15 @@ impl BackupService {
         let files_skipped = Some(*skipped_count.lock().unwrap() as f64);
         let date_end = chrono::Local::now().naive_local();
 
-        send_event(&app,"backup_files",BackupProgress {
-                                copied_files:*copied_count.lock().unwrap(),
-                                total_files:detail_from_folder.files_count
-                            });
+        send_event(
+            &app,
+            "backup_files",
+            BackupProgress {
+                copied_files: *copied_count.lock().unwrap(),
+                skipped_files : *skipped_count.lock().unwrap(),
+                total_files: detail_from_folder.files_count,
+            },
+        );
 
         let history = CreateHistroyDto {
             date_start,
@@ -136,17 +160,22 @@ impl BackupService {
             profile_id: profile.profile.id.clone(),
         };
         let _ = create_history(&history);
-        
-        send_event(&app,"backup_finished",BackupFinished {
-                    files_copied,
-                    files_total: history.files_total,
-                    profile_name: profile.profile.name_profile.clone(),
-                });
+
+        send_event(
+            &app,
+            "backup_finished",
+            BackupFinished {
+                files_copied,
+                files_total: history.files_total,
+                profile_name: profile.profile.name_profile.clone(),
+            },
+        );
 
         log::info!(
-            "Backup finished {} / {} copied files",
+            "Backup finished {} / {} copied files / {} skipped files",
             *copied_count.lock().unwrap(),
-            detail_from_folder.files_count
+            detail_from_folder.files_count,
+           *skipped_count.lock().unwrap()
         )
     }
 

@@ -29,6 +29,7 @@ export type TabRoute = {
 export type BackupProgress = {
   totalFiles: number;
   copiedFiles: number;
+  skippedFiles:number;
 };
 
 export type BackupFinished = {
@@ -47,10 +48,10 @@ export type BackupHistory = {
   id: string,
   date_start: string,
   date_end:string,
-  files_copied?:number,
-  files_skipped?:number,
-  files_total?:number,
-  folder_size?:number,
+  files_copied:number,
+  files_skipped:number,
+  files_total:number,
+  folder_size:number,
   duration:number,
   profile:Profile
 }
