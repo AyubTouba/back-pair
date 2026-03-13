@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
-import { MessageCircleWarning } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { Button } from './ui/button'
 
 interface ConfirmDialogProps {
@@ -13,12 +13,14 @@ interface ConfirmDialogProps {
 }
 
 
-function ConfirmDialog({ title, body, yesLabel = "yes", noLabel = "no", setDialog, showDialog, setResult }: ConfirmDialogProps) {
+function ConfirmDialog({ title, body, yesLabel = "Yes", noLabel = "No", setDialog, showDialog, setResult }: ConfirmDialogProps) {
     return <Dialog open={showDialog} onOpenChange={setDialog}>
         <DialogContent className="sm:max-w-md">
             <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                    <MessageCircleWarning className="h-5 w-5 text-primary" />
+                    <div className="rounded-full bg-destructive/10 p-2">
+                        <AlertTriangle className="h-5 w-5 text-destructive" />
+                    </div>
                     {title}
                 </DialogTitle>
                 <DialogDescription>
@@ -28,13 +30,12 @@ function ConfirmDialog({ title, body, yesLabel = "yes", noLabel = "no", setDialo
 
 
 
-            <DialogFooter className="flex sm:justify-between">
-
-                <Button variant="outline" onClick={() => { setResult(true); setDialog(false); }}>
-                    {yesLabel}
-                </Button>
-                <Button onClick={() => { setResult(false); setDialog(false); }}>
+            <DialogFooter className="flex gap-2 sm:justify-end">
+                <Button variant="outline" onClick={() => { setResult(false); setDialog(false); }}>
                     {noLabel}
+                </Button>
+                <Button variant="destructive" onClick={() => { setResult(true); setDialog(false); }}>
+                    {yesLabel}
                 </Button>
 
             </DialogFooter>

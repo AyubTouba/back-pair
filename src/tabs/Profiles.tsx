@@ -2,7 +2,7 @@ import { ProfileCard } from '@/components/ProfileCard'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
-import { Folder, Plus } from 'lucide-react'
+import { FolderPlus, Plus } from 'lucide-react'
 import { useContext, useEffect, useState } from 'react'
 import { toast } from "sonner"
 import { invoke } from "@tauri-apps/api/core";
@@ -11,6 +11,9 @@ import { CurrentTabContext } from '@/contexts/CurrentTabContext'
 import { TABS } from '@/types/enums'
 import { ProfileContext } from '@/contexts/ProfilesContext'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import { PageHeader } from "@/components/PageHeader"
+import { motion } from 'framer-motion'
+import { staggerContainer, cardVariants, fadeIn } from '@/lib/animations'
 
 
 export default function Profiles() {
@@ -67,47 +70,55 @@ export default function Profiles() {
 
     return (
         <div className="flex flex-col h-full p-6 gap-6">
-            <header className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-bold">Profiles</h1>
-                </div>
-                <Button onClick={() => setCurrentTab({ tab: TABS.ADDBACKUPPROFILE })} >
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Profile
-                </Button>
-            </header>
+            <PageHeader
+                title="Profiles"
+                subtitle="Manage your backup configurations"
+                actions={
+                    <Button onClick={() => setCurrentTab({ tab: TABS.ADDBACKUPPROFILE })} >
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Profile
+                    </Button>
+                }
+            />
             <ConfirmDialog title="Are are sure want to delete this profile"
                 showDialog={deleteDialog} setDialog={setDeleteDialog}
                 setResult={setTodelete} body={null} />
             <ScrollArea className="flex-1 pr-4">
-
-                <div className="grid gap-6 pb-6">
-                    {profiles.length > 0 ? (
-                        profiles.map((profile) => (
-                            <ProfileCard
-                                key={profile.id}
-                                profile={profile}
-                                onDelete={deleteProfile}
-                                onRunBackup={runBackup}
-                                onEdit={toEditProfile}
-                            />
-                        ))
-                    ) : (
-                        <Card className="flex flex-col items-center justify-center p-6 text-center">
-                            <div className="mb-4 rounded-full bg-muted p-3">
-                                <Folder className="h-6 w-6 text-muted-foreground" />
+                {profiles.length > 0 ? (
+                    <motion.div
+                        variants={staggerContainer}
+                        initial="hidden"
+                        animate="show"
+                        className="grid grid-cols-2 gap-4 pb-6"
+                    >
+                        {profiles.map((profile) => (
+                            <motion.div key={profile.id} variants={cardVariants}>
+                                <ProfileCard
+                                    profile={profile}
+                                    onDelete={deleteProfile}
+                                    onRunBackup={runBackup}
+                                    onEdit={toEditProfile}
+                                />
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                ) : (
+                    <motion.div variants={fadeIn} initial="hidden" animate="show" className="pb-6">
+                        <Card className="flex flex-col items-center justify-center p-8 text-center border-dashed">
+                            <div className="mb-4 rounded-full bg-primary/10 p-4">
+                                <FolderPlus className="h-12 w-12 text-primary" />
                             </div>
-                            <h3 className="mb-2 text-lg font-medium">No profiles yet</h3>
-                            <p className="mb-4 text-sm text-muted-foreground">
-                                Create your first backup profile to get started
+                            <h3 className="mb-2 text-xl font-medium tracking-tight">No profiles yet</h3>
+                            <p className="mb-6 text-sm text-muted-foreground max-w-sm">
+                                Create your first backup profile to define which folders you'd like to keep synced and secure.
                             </p>
-                            <Button onClick={() => setCurrentTab({ tab: TABS.ADDBACKUPPROFILE })}>
+                            <Button size="lg" onClick={() => setCurrentTab({ tab: TABS.ADDBACKUPPROFILE })}>
                                 <Plus className="h-4 w-4 mr-2" />
                                 Create Profile
                             </Button>
                         </Card>
-                    )}
-                </div>
+                    </motion.div>
+                )}
             </ScrollArea >
         </div >
     )

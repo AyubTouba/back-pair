@@ -1,62 +1,67 @@
-import { TABS } from "./enums"
+import { TABS } from "./enums";
+import { LucideIcon } from "lucide-react";
 
 export type Menu = {
-    navMain: NavMenu[]
-  }
+  navMain: NavMenu[];
+};
 
-export type NavMenu = { title: string, tab: TABS,items: ItemMenu[]  }
-export type ItemMenu = { title: string, tab: TABS}
+export type NavMenu = {
+  title: string;
+  tab: TABS;
+  icon?: LucideIcon;
+  items: ItemMenu[];
+};
+export type ItemMenu = { title: string; tab: TABS; icon?: LucideIcon };
 
 export type FolderPair = {
-    id: string
-    from_folder: string
-    to_folder: string
-  }
+  id: string;
+  from_folder: string;
+  to_folder: string;
+};
 
 export type Profile = {
-   id: string,
-   name_profile: string,
-   created_at: string,
-   lastBackup?:string,
-   pairfolders:FolderPair[]
-}
+  id: string;
+  name_profile: string;
+  created_at: string;
+  lastBackup?: string;
+  pairfolders: FolderPair[];
+};
 
 export type TabRoute = {
-  tab:TABS,
-  params?:any
-}
+  tab: TABS;
+  params?: any;
+};
 
 export type BackupProgress = {
   totalFiles: number;
   copiedFiles: number;
-  skippedFiles:number;
+  skippedFiles: number;
 };
 
 export type BackupFinished = {
-    filesCopied: number;
-    filesTotal:number;
-    profileName: string;
+  filesCopied: number;
+  filesTotal: number;
+  profileName: string;
 };
 
-
 export type DetailFromFolders = {
-  filesCount:number;
-  foldersSize:number;
-}
+  filesCount: number;
+  foldersSize: number;
+};
 
 export type BackupHistory = {
-  id: string,
-  date_start: string,
-  date_end:string,
-  files_copied:number,
-  files_skipped:number,
-  files_total:number,
-  folder_size:number,
-  duration:number,
-  profile:Profile
-}
+  id: string;
+  date_start: string;
+  date_end: string;
+  files_copied: number;
+  files_skipped: number;
+  files_total: number;
+  folder_size: number;
+  duration: number;
+  profile: Profile;
+};
 
 export type AppError = {
-  type: 'databaseError' | 'filesError';
-  message:string;
-}
+  type: "databaseError" | "filesError";
+  message: string;
+};
