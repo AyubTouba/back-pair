@@ -1,7 +1,7 @@
 {
   "name": "back-pair",
   "private": true,
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "A fast and simple backup tool built with Tauri, Rust and React for managing folder-to-folder backups using profiles.",
   "author": "Ayoub Touba",
   "license": "MIT",
@@ -34,6 +34,7 @@
     "@tauri-apps/plugin-updater": "~2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.36.0",
     "lucide-react": "^0.503.0",
     "next-themes": "^0.4.6",
     "react": "^18.3.1",

@@ -1,3 +1,4 @@
+import "@fontsource/ubuntu/400.css";
 import "@fontsource/ubuntu/700.css";
 
 import { useState } from "react";
@@ -13,6 +14,9 @@ import { Toaster } from "sonner";
 import History from "./tabs/History";
 import { AppProvider } from "./contexts/AppProvider";
 import { CheckUpdater } from "./components/Updater";
+import { FolderHeart, PlusCircle, LayoutGrid, Play, Clock, Shield } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { pageVariants } from "@/lib/animations";
 
 
 const menu: Menu = {
@@ -20,28 +24,34 @@ const menu: Menu = {
     {
       title: "Backup Profile",
       tab: TABS.PROFILES,
+      icon: FolderHeart,
       items: [
         {
           title: "Add Profile",
           tab: TABS.ADDBACKUPPROFILE,
+          icon: PlusCircle,
         },
         {
           title: "Profiles",
           tab: TABS.PROFILES,
+          icon: LayoutGrid,
         },
       ],
     },
     {
       title: "Backup",
       tab: TABS.RUNBACKUP,
+      icon: Shield,
       items: [
         {
           title: "Run Backup",
           tab: TABS.RUNBACKUP,
+          icon: Play,
         },
         {
           title: "History",
           tab: TABS.HISTORY,
+          icon: Clock,
         },
       ],
     },
@@ -55,15 +65,25 @@ function App() {
 
   return (
     <AppProvider isBackupRunning={isBackupRunning} setIsBackupRunning={setIsBackupRunning} currentTab={currentTab} setCurrentTab={setCurrentTab} profiles={profiles} setProfiles={setProfiles}>
-     <CheckUpdater /> 
+      <CheckUpdater />
       <SidebarProvider>
         <div className="flex h-screen w-full ">
           <AppSidebar menu={menu} />
           <SidebarInset>
-            {currentTab.tab == TABS.RUNBACKUP && <Backup />}
-            {currentTab.tab == TABS.PROFILES && <Profiles />}
-            {currentTab.tab == TABS.ADDBACKUPPROFILE && <AddProfile />}
-            {currentTab.tab == TABS.HISTORY && <History />}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentTab.tab}
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                className="h-full"
+              >
+                {currentTab.tab == TABS.RUNBACKUP && <Backup />}
+                {currentTab.tab == TABS.PROFILES && <Profiles />}
+                {currentTab.tab == TABS.ADDBACKUPPROFILE && <AddProfile />}
+                {currentTab.tab == TABS.HISTORY && <History />}
+              </motion.div>
+            </AnimatePresence>
             <Toaster />
           </SidebarInset>
         </div>

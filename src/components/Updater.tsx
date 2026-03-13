@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { check, Update } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
-import { CheckCircle2, Download } from "lucide-react";
+import { CheckCircle2, Download, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { Progress } from "./ui/progress";
 import { Button } from "./ui/button";
 import { getPercentage } from "@/utils/helper";
@@ -40,7 +40,7 @@ export function CheckUpdater() {
                 case 'Progress':
                     downloaded += event.data.chunkLength;
                     if (contentLength > 0) {
-                        const progress = getPercentage(downloaded,contentLength);
+                        const progress = getPercentage(downloaded, contentLength);
                         setUpdateProgress(progress);
                     }
                     break;
@@ -62,8 +62,13 @@ export function CheckUpdater() {
         <DialogContent className="sm:max-w-md">
             <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                    <Download className="h-5 w-5 text-primary" />
-                    New version Available
+                    <div className="rounded-full bg-primary/10 p-2">
+                        <Download className="h-5 w-5 text-primary" />
+                    </div>
+                    <span className="flex items-center gap-1">
+                        New Version Available
+                        <Sparkles className="h-4 w-4 text-primary" />
+                    </span>
                 </DialogTitle>
                 <DialogDescription>
                     {(!isUpdating && !updateComplete) && (
@@ -85,11 +90,13 @@ export function CheckUpdater() {
             {updateComplete && (
                 <div className="space-y-4 py-4">
                     <div className="flex items-center gap-3 mb-2">
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        <div className="rounded-full bg-emerald-500/10 p-2">
+                            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                        </div>
                         <div>
                             <h4 className="font-medium">Update Complete!</h4>
                             <p className="text-sm text-muted-foreground">
-                                BackupGuard has been successfully updated to version 1.1.0.
+                                BackPair has been successfully updated to version {version}.
                             </p>
                         </div>
                     </div>
@@ -111,12 +118,14 @@ export function CheckUpdater() {
 
                 {isUpdating && !updateComplete && (
                     <Button variant="outline" disabled className="ml-auto">
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Installing...
                     </Button>
                 )}
 
                 {updateComplete && (
                     <Button onClick={restartApp} className="ml-auto">
+                        <RefreshCw className="h-4 w-4 mr-2" />
                         Restart
                     </Button>
                 )}
