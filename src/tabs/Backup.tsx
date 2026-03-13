@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Play, FileText, Layers, Copy, SkipForward, Files, Terminal } from 'lucide-react'
+import { Play, Layers, Copy, SkipForward, Files, Terminal } from 'lucide-react'
 import React, { useContext, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core'
 import { AppError, BackupFinished, BackupProgress, DetailFromFolders, Profile } from '@/types/types'
