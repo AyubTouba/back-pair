@@ -7,26 +7,23 @@ on:
       - main
 
 jobs:
-  build:
-    name: Build (${{ matrix.artifact }})
+  publish-tauri:
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: macos-latest
-            artifact: macos-arm64
             args: "--target aarch64-apple-darwin"
 
           - platform: macos-latest
-            artifact: macos-intel
             args: "--target x86_64-apple-darwin"
 
           - platform: ubuntu-22.04
-            artifact: linux
             args: ""
 
           - platform: windows-latest
-            artifact: windows
             args: ""
 
     runs-on: ${{ matrix.platform }}
@@ -62,38 +59,16 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      - name: Build Tauri App
-        uses: tauri-apps/tauri-action@v0
+      - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          tagName: v__VERSION__
+          releaseName: "BackPair v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
+          releaseDraft: true
+          includeUpdaterJson: true
+          prerelease: false
           args: ${{ matrix.args }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact }}
-          path: src-tauri/target/**/release/bundle/**/*
-
-  release:
-    name: Create Release
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ github.run_number }}
-          name: "BackPair v${{ github.run_number }}"
-          draft: true
-          files: artifacts/**/*
