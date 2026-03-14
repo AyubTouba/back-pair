@@ -81,6 +81,8 @@ jobs:
     name: Create Release
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Download artifacts
@@ -89,22 +91,9 @@ jobs:
           path: artifacts
 
       - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
-          release_name: "BackPair v${{ github.run_number }}"
+          name: "BackPair v${{ github.run_number }}"
           draft: true
-          prerelease: false
-
-      - name: Upload Release Assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts
-          asset_name: BackPair-${{ github.run_number }}
-          asset_content_type: application/octet-stream
+          files: artifacts/**/*
