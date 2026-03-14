@@ -8,18 +8,25 @@ on:
 
 jobs:
   build:
-    name: Build (${{ matrix.platform }})
+    name: Build (${{ matrix.artifact }})
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: macos-latest
+            artifact: macos-arm64
             args: "--target aarch64-apple-darwin"
+
           - platform: macos-latest
+            artifact: macos-intel
             args: "--target x86_64-apple-darwin"
+
           - platform: ubuntu-22.04
+            artifact: linux
             args: ""
+
           - platform: windows-latest
+            artifact: windows
             args: ""
 
     runs-on: ${{ matrix.platform }}
@@ -27,9 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # -------------------------
       # Node + Yarn caching
-      # -------------------------
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -39,9 +44,7 @@ jobs:
       - name: Install frontend dependencies
         run: yarn install --frozen-lockfile
 
-      # -------------------------
-      # Rust + Cargo caching
-      # -------------------------
+      # Rust caching
       - name: Cache Rust
         uses: Swatinem/rust-cache@v2
         with:
@@ -52,9 +55,7 @@ jobs:
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      # -------------------------
       # Linux dependencies
-      # -------------------------
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -66,9 +67,7 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      # -------------------------
       # Build Tauri (WITH signing)
-      # -------------------------
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
@@ -78,18 +77,14 @@ jobs:
         with:
           args: ${{ matrix.args }}
 
-      # -------------------------
-      # Upload artifacts
-      # -------------------------
+      # Upload artifacts (unique name per platform)
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}
+          name: ${{ matrix.artifact }}
           path: src-tauri/target/**/release/bundle/**/*
 
-  # -------------------------------------------------------
-  # Release job (runs once, merges all artifacts)
-  # -------------------------------------------------------
+  # Release job
   release:
     name: Create Release
     needs: build
@@ -101,9 +96,6 @@ jobs:
         with:
           path: artifacts
 
-      # -------------------------
-      # Create Release (NO signing)
-      # -------------------------
       - name: Create GitHub Release
         uses: tauri-apps/tauri-action@v0
         env:
