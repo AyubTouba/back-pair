@@ -34,7 +34,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Node + Yarn caching
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -44,18 +43,14 @@ jobs:
       - name: Install frontend dependencies
         run: yarn install --frozen-lockfile
 
-      # Rust caching
       - name: Cache Rust
         uses: Swatinem/rust-cache@v2
-        with:
-          cache-on-failure: true
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      # Linux dependencies
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -67,7 +62,6 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      # Build Tauri (WITH signing)
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
@@ -77,35 +71,40 @@ jobs:
         with:
           args: ${{ matrix.args }}
 
-      # Upload artifacts (unique name per platform)
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
           path: src-tauri/target/**/release/bundle/**/*
 
-  # Release job
   release:
     name: Create Release
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
       - name: Create GitHub Release
-        uses: tauri-apps/tauri-action@v0
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v__VERSION__
-          releaseName: "BackPair v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
-          releaseDraft: true
-          includeUpdaterJson: true
+          tag_name: v${{ github.run_number }}
+          release_name: "BackPair v${{ github.run_number }}"
+          draft: true
           prerelease: false
-          artifacts: "artifacts/**"
-          skipSign: true
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: artifacts
+          asset_name: BackPair-${{ github.run_number }}
+          asset_content_type: application/octet-stream
