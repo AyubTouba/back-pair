@@ -67,12 +67,14 @@ jobs:
             patchelf
 
       # -------------------------
-      # Build Tauri
+      # Build Tauri (WITH signing)
       # -------------------------
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           args: ${{ matrix.args }}
 
@@ -99,12 +101,13 @@ jobs:
         with:
           path: artifacts
 
+      # -------------------------
+      # Create Release (NO signing)
+      # -------------------------
       - name: Create GitHub Release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__
           releaseName: "BackPair v__VERSION__"
@@ -113,3 +116,4 @@ jobs:
           includeUpdaterJson: true
           prerelease: false
           artifacts: "artifacts/**"
+          skipSign: true
