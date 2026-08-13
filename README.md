@@ -1,3 +1,5 @@
+
+
 # BackPair
 
 <p align="center">
@@ -5,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/v/release/AyubTouba/back-pair"><img src="https://img.shields.io/github/v/release/AyubTouba/back-pair" alt="Latest Release"></a>
+  <a href="https://github.com/AyubTouba/back-pair/releases"><img src="https://img.shields.io/github/v/release/AyubTouba/back-pair" alt="Latest Release"></a>
   <img src="https://img.shields.io/badge/built%20with-tauri-blueviolet" alt="Built with Tauri">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License: MIT">
 </p>
@@ -67,4 +69,3 @@ We welcome contributions to `BackPair`! If you have ideas for new features, find
 
 ## License
 This project is licensed under the MIT License
-
